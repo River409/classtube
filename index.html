@@ -130,14 +130,8 @@ const uploadTab = document.getElementById('uploadTab');
 const profileContent = document.getElementById('profileContent');
 const uploadSection = document.getElementById('uploadSection');
 
-profileTab.onclick = ()=>{
-  profileTab.classList.add('active'); uploadTab.classList.remove('active');
-  profileContent.style.display='block'; uploadSection.style.display='none';
-};
-uploadTab.onclick = ()=>{
-  uploadTab.classList.add('active'); profileTab.classList.remove('active');
-  profileContent.style.display='none'; uploadSection.style.display='block';
-};
+profileTab.onclick = ()=>{ profileTab.classList.add('active'); uploadTab.classList.remove('active'); profileContent.style.display='block'; uploadSection.style.display='none'; };
+uploadTab.onclick = ()=>{ uploadTab.classList.add('active'); profileTab.classList.remove('active'); profileContent.style.display='none'; uploadSection.style.display='block'; };
 
 // --- Header ---
 document.getElementById("homeBtn").onclick = ()=>showSection('feed');
@@ -153,10 +147,7 @@ function showSection(section){
 
 // --- Avatar Colors ---
 const avatarColors = ["#AA47BD","#7B1FA2","#77919D","#455A65","#EC417A","#C1175C","#5D6AC0","#0388D2","#00579B","#0098A7","#00897B","#004D40","#68A039","#34691E","#8C6E63","#5D4138","#7D57C1","#512DA7","#EF6C00","#F6511E","#BE360B"];
-function getAvatarColor(name){
-  let hash=0; for(let i=0;i<name.length;i++){hash=name.charCodeAt(i)+((hash<<5)-hash);}
-  return avatarColors[Math.abs(hash)%avatarColors.length];
-}
+function getAvatarColor(name){ let hash=0; for(let i=0;i<name.length;i++){hash=name.charCodeAt(i)+((hash<<5)-hash);} return avatarColors[Math.abs(hash)%avatarColors.length]; }
 
 // --- Signup ---
 document.getElementById('signupBtn').onclick = async ()=>{
@@ -214,7 +205,7 @@ async function loadUsers(){
 async function loadVideos(){
   const q=query(collection(db,"videos"),orderBy("createdAt","desc"));
   const snapshot = await getDocs(q);
-  let html="<table border='1' cellpadding='5'><tr><th>Title</th><th>Video</th><th>Uploader</th><th>Views</th></tr>";
+  let html="<table border='1' cellpadding='5'><tr><th>Title</th><th>Video</th><th>Uploader</th><th>Views</th><th>Likes</th><th>Dislikes</th></tr>";
   snapshot.forEach(doc=>{
     const data = doc.data();
     const videoId = doc.id;
@@ -223,6 +214,8 @@ async function loadVideos(){
       <td><a href="${data.url}" target="_blank" onclick="incrementView('${videoId}')">Watch</a></td>
       <td>${data.user}</td>
       <td>${data.views || 0}</td>
+      <td>${data.likes || 0} <button onclick="likeVideo('${videoId}')">+</button></td>
+      <td>${data.dislikes || 0} <button onclick="dislikeVideo('${videoId}')">+</button></td>
     </tr>`;
   });
   html+="</table>"; document.getElementById('videoList').innerHTML=html;
@@ -235,12 +228,26 @@ window.incrementView = async function(videoId){
   await loadVideos();
 }
 
+// --- Like Video ---
+window.likeVideo = async function(videoId){
+  const videoRef = doc(db,"videos",videoId);
+  await updateDoc(videoRef,{ likes: increment(1) });
+  await loadVideos();
+}
+
+// --- Dislike Video ---
+window.dislikeVideo = async function(videoId){
+  const videoRef = doc(db,"videos",videoId);
+  await updateDoc(videoRef,{ dislikes: increment(1) });
+  await loadVideos();
+}
+
 // --- Upload Video ---
 document.getElementById('postVideoBtn').onclick = async ()=>{
   const title = document.getElementById('videoTitle').value.trim();
   const url = document.getElementById('videoURL').value.trim();
   if(!title || !url){ alert("Title and URL are required!"); return; }
-  await addDoc(collection(db,"videos"),{ title,url,user: currentUser.username, userId: currentUser.uid, createdAt:new Date(), views:0 });
+  await addDoc(collection(db,"videos"),{ title,url,user: currentUser.username, userId: currentUser.uid, createdAt:new Date(), views:0, likes:0, dislikes:0 });
   document.getElementById('videoTitle').value=""; document.getElementById('videoURL').value="";
   await loadVideos(); alert("Video uploaded!");
 }
