@@ -214,8 +214,8 @@ async function loadVideos(){
       <td><a href="${data.url}" target="_blank" onclick="incrementView('${videoId}')">Watch</a></td>
       <td>${data.user}</td>
       <td>${data.views || 0}</td>
-      <td>${data.likes || 0} <button onclick="likeVideo('${videoId}')">+</button></td>
-      <td>${data.dislikes || 0} <button onclick="dislikeVideo('${videoId}')">+</button></td>
+      <td>${data.likes || 0} <button onclick="likeVideo('${videoId}')">👍</button></td>
+      <td>${data.dislikes || 0} <button onclick="dislikeVideo('${videoId}')">👎</button></td>
     </tr>`;
   });
   html+="</table>"; document.getElementById('videoList').innerHTML=html;
