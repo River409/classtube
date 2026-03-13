@@ -2,9 +2,14 @@
 <html>
 <head>
 <title>ClassTube</title>
-
 <style>
 body{ font-family:Arial; margin:0; }
+
+.tabButton {
+  padding:5px 10px; margin-right:5px; cursor:pointer;
+  background:#CCC; border:1px solid #999;
+}
+.tabButton.active { background:#999; color:white; }
 
 .videoCard{
   border-bottom:1px solid #ccc;
@@ -22,7 +27,7 @@ body{ font-family:Arial; margin:0; }
 
 .videoTitle:hover{ text-decoration:underline; }
 
-.watchPage{ display:flex; gap:20px; }
+.watchPage{ display:flex; gap:20px; margin-top:20px; }
 
 .mainVideo{ width:70%; }
 
@@ -38,6 +43,7 @@ body{ font-family:Arial; margin:0; }
   font-weight:bold; font-family:Arial,sans-serif; text-transform:none;
   margin-right:5px;
 }
+
 .studentItem{ display:flex; align-items:center; gap:5px; margin-bottom:5px; }
 </style>
 </head>
@@ -84,18 +90,34 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 
 <!-- PROFILE -->
 <div id="profileSection" style="display:none;padding:20px">
-<h2>My Profile</h2>
+<div id="tabs">
+<span id="profileTab" class="tabButton active">Profile</span>
+<span id="uploadTab" class="tabButton">Upload</span>
+</div>
+
+<div id="profileContent">
+<h3>Profile Info</h3>
 Username: <span id="profileUsername"></span><br>
-Bio:<br><textarea id="bio" rows="5" cols="40"></textarea><br>
-<input type="button" value="Save Bio" id="saveBioBtn"><br><br>
+Bio:<br>
+<textarea id="bio" rows="5" cols="40"></textarea><br>
+<input type="button" value="Save Bio" id="saveBioBtn"><br>
+<span id="profileStatus"></span>
 <h3>My Videos</h3>
 <div id="userVideos"></div>
+</div>
+
+<div id="uploadSection" style="display:none;margin-top:10px">
+<h3>Upload Video</h3>
+Title:<br><input type="text" id="videoTitle"><br>
+Video URL:<br><input type="text" id="videoURL"><br>
+<input type="button" value="Post Video" id="postVideoBtn"><br>
+</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -118,13 +140,22 @@ let videosCache=[];
 const avatarColors = ["#AA47BD","#7B1FA2","#77919D","#455A65","#EC417A","#C1175C","#5D6AC0","#0388D2","#00579B","#0098A7","#00897B","#004D40","#68A039","#34691E","#8C6E63","#5D4138","#7D57C1","#512DA7","#EF6C00","#F6511E","#BE360B"];
 function getAvatarColor(name){ let hash=0; for(let i=0;i<name.length;i++){hash=name.charCodeAt(i)+((hash<<5)-hash);} return avatarColors[Math.abs(hash)%avatarColors.length]; }
 
+// --- Tabs ---
+const profileTab=document.getElementById('profileTab');
+const uploadTab=document.getElementById('uploadTab');
+const profileContent=document.getElementById('profileContent');
+const uploadSection=document.getElementById('uploadSection');
+
+profileTab.onclick=()=>{ profileTab.classList.add('active'); uploadTab.classList.remove('active'); profileContent.style.display='block'; uploadSection.style.display='none'; };
+uploadTab.onclick=()=>{ uploadTab.classList.add('active'); profileTab.classList.remove('active'); profileContent.style.display='none'; uploadSection.style.display='block'; };
+
 // --- LOGIN/SIGNUP ---
 signupBtn.onclick=async()=>{
   const username=signupUsername.value.trim();
   const email=signupEmail.value.trim();
   const password=signupPassword.value;
   if(!username){ status.innerText="Username required"; return; }
-  const userCred = await createUserWithEmailAndPassword(auth,email,password);
+  const userCred=await createUserWithEmailAndPassword(auth,email,password);
   await setDoc(doc(db,"users",userCred.user.uid),{username,email,bio:"",createdAt:new Date()});
   signupUsername.value=""; signupEmail.value=""; signupPassword.value="";
   status.innerText="Account created!";
@@ -149,8 +180,9 @@ onAuthStateChanged(auth,async(user)=>{
 // --- NAVIGATION ---
 homeBtn.onclick=()=>{ showFeed(); };
 myProfileBtn.onclick=()=>{ loadProfile(); };
+logoutBtn.onclick=async()=>{ await signOut(auth); };
 
-// Show feed
+// --- Show feed ---
 function showFeed(){
   document.getElementById("feedSection").style.display="block";
   document.getElementById("profileSection").style.display="none";
@@ -221,19 +253,20 @@ window.watchVideo=function(id){
 async function loadProfile(){
   const docSnap=await getDoc(doc(db,"users",currentUser.uid));
   if(docSnap.exists()){
-    document.getElementById("profileSection").style.display="block";
-    document.getElementById("feedSection").style.display="none";
-    userList.style.display="block";
+    profileSection.style.display="block";
+    feedSection.style.display="none";
+    profileTab.classList.add('active'); uploadTab.classList.remove('active');
+    profileContent.style.display='block'; uploadSection.style.display='none';
     profileUsername.innerText=docSnap.data().username;
     bio.value=docSnap.data().bio||"";
+    await loadUserVideos();
   }
 }
 
 // --- SAVE BIO ---
 saveBioBtn.onclick=async()=>{
-  const bioText=bio.value.trim();
-  await setDoc(doc(db,"users",currentUser.uid),{bio:bioText},{merge:true});
-  status.innerText="Bio saved!";
+  await setDoc(doc(db,"users",currentUser.uid),{bio:bio.value},{merge:true});
+  profileStatus.innerText="Bio saved!";
 };
 
 // --- LOAD USER VIDEOS ---
@@ -250,7 +283,14 @@ async function loadUserVideos(){
   userVideos.innerHTML=html;
 }
 
+// --- UPLOAD VIDEO ---
+postVideoBtn.onclick=async()=>{
+  if(!videoTitle.value.trim() || !videoURL.value.trim()){ alert("Title & URL required"); return; }
+  await addDoc(collection(db,"videos"),{title:videoTitle.value,user:currentUser.username,url:videoURL.value,createdAt:new Date()});
+  videoTitle.value=""; videoURL.value="";
+  await loadVideos(); await loadUserVideos();
+  alert("Video uploaded!");
+};
 </script>
-
 </body>
 </html>
