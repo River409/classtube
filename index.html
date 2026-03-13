@@ -1,54 +1,64 @@
 <!DOCTYPE html>
+
 <html>
 <head>
 <title>ClassTube</title>
 
 <style>
 
-.avatar{
-width:30px;
-height:30px;
-border-radius:50%;
-color:white;
-display:flex;
-justify-content:center;
-align-items:center;
-font-weight:bold;
+body{
 font-family:Arial;
+margin:0;
 }
 
-.tabButton{
-padding:5px 10px;
-margin-right:5px;
+.videoCard{
+border-bottom:1px solid #ccc;
+padding:10px;
+display:flex;
+gap:10px;
+}
+
+.videoTitle{
+color:#065fd4;
+font-weight:bold;
 cursor:pointer;
-background:#CCC;
-border:1px solid #999;
+text-decoration:none;
 }
 
-.tabButton.active{
-background:#999;
-color:white;
+.videoTitle:hover{
+text-decoration:underline;
 }
 
-#uploadSection{
-display:none;
-margin-top:10px;
+.watchPage{
+display:flex;
+gap:20px;
+}
+
+.mainVideo{
+width:70%;
+}
+
+.sideVideos{
+width:30%;
+}
+
+.sideVideo{
+display:flex;
+gap:8px;
+margin-bottom:10px;
+cursor:pointer;
+}
+
+.sideVideoTitle{
+color:#065fd4;
+font-size:14px;
 }
 
 </style>
+
 </head>
 
-<body bgcolor="#FFF" style="margin:0;font-family:Arial">
-
-<!-- HEADER -->
-
-<div id="userProfile" style="position:absolute;top:10px;right:15px;display:flex;align-items:center;gap:8px">
-
-<img id="userAvatar" style="width:34px;height:34px;border-radius:50%;display:none">
-
-<span id="usernameDisplay"></span>
-
-</div>
+<body>
 
 <table width="100%" border="1">
 <tr>
@@ -58,9 +68,7 @@ margin-top:10px;
 
 <span id="headerLinks" style="float:right;display:none">
 
-<a href="#" id="homeBtn">Home</a> |
-<a href="#" id="myProfileBtn">My Profile</a> |
-<a href="#" id="logoutBtn">Logout</a>
+<a href="#" id="homeBtn">Home</a> | <a href="#" id="myProfileBtn">My Profile</a> | <a href="#" id="logoutBtn">Logout</a>
 
 </span>
 
@@ -68,36 +76,25 @@ margin-top:10px;
 </tr>
 </table>
 
-
-<!-- LOGIN -->
-
 <div id="loginSection" style="width:300px;margin:50px auto;background:#DDD;padding:10px;border:1px solid #999">
 
 <h2>Login / Sign Up</h2>
 
 <b>Sign Up</b><br><br>
 
-Username:<br>
-<input type="text" id="signupUsername"><br><br>
+Username:<br> <input id="signupUsername"><br><br>
 
-Email:<br>
-<input type="email" id="signupEmail"><br><br>
+Email:<br> <input id="signupEmail"><br><br>
 
-Birthdate:<br>
-<input type="date" id="signupBirthdate"><br><br>
-
-Password:<br>
-<input type="password" id="signupPassword"><br><br>
+Password:<br> <input type="password" id="signupPassword"><br><br>
 
 <input type="button" value="Create Account" id="signupBtn"><br><br>
 
 <b>Login</b><br><br>
 
-Email:<br>
-<input type="email" id="loginEmail"><br><br>
+Email:<br> <input id="loginEmail"><br><br>
 
-Password:<br>
-<input type="password" id="loginPassword"><br><br>
+Password:<br> <input type="password" id="loginPassword"><br><br>
 
 <input type="button" value="Login" id="loginBtn"><br><br>
 
@@ -105,178 +102,122 @@ Password:<br>
 
 </div>
 
-
-<!-- FEED -->
-
 <div id="feedSection" style="display:none;padding:20px">
 
 <h3>Welcome, <span id="userEmail"></span></h3>
 
 <hr>
 
-<h3>Students:</h3>
+<h3>Students</h3>
 
 <div id="userList"></div>
 
-<h3>All Videos:</h3>
+<hr>
 
 <div id="videoList"></div>
 
 </div>
 
-
-<!-- PROFILE -->
-
-<div id="profileSection" style="display:none;padding:20px">
-
-<div id="tabs">
-
-<span id="profileTab" class="tabButton active">Profile</span>
-
-<span id="uploadTab" class="tabButton">Upload</span>
-
-</div>
-
-<div id="profileContent">
-
-Username: <b id="profileUsername"></b><br>
-
-Join date: <span id="profileJoinDate"></span><br><br>
-
-Bio:<br>
-
-<textarea id="bio" rows="5" cols="40"></textarea><br>
-
-<input type="button" value="Save Bio" id="saveBioBtn"><br><br>
-
-<span id="profileStatus"></span>
-
-</div>
-
-<div id="uploadSection">
-
-Title:<br>
-<input type="text" id="videoTitle"><br>
-
-Video URL:<br>
-<input type="text" id="videoURL"><br>
-
-<input type="button" value="Post Video" id="postVideoBtn"><br>
-
-</div>
-
-<h3>Uploaded Videos:</h3>
-
-<div id="userVideos"></div>
-
-</div>
-
-
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
+import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
-
 apiKey:"AIzaSyC2QdW6Gq3dnFf2JL4-vET-68M6LvTJUvw",
 authDomain:"classtube2-1436a.firebaseapp.com",
 projectId:"classtube2-1436a",
 storageBucket:"classtube2-1436a.firebasestorage.app",
 messagingSenderId:"290016676161",
 appId:"1:290016676161:web:1f88361dcb31ad31fd79c0"
-
 };
 
-
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getFirestore(app);
 
-let currentUser=null;
+let videosCache=[];
 
 
+// LOGIN STATE
 
-function showSection(section){
-
-document.getElementById("loginSection").style.display=(section==="login")?"block":"none";
-document.getElementById("feedSection").style.display=(section==="feed")?"block":"none";
-document.getElementById("profileSection").style.display=(section==="profile")?"block":"none";
-
-}
-
-
-
-document.getElementById("homeBtn").onclick=()=>showSection('feed');
-
-document.getElementById("myProfileBtn").onclick=()=>loadProfile();
-
-document.getElementById("logoutBtn").onclick=async()=>{await signOut(auth);};
-
-
-
-const status=document.getElementById("status");
-
-const headerLinks=document.getElementById("headerLinks");
-
-const userEmail=document.getElementById("userEmail");
-
-
-
-onAuthStateChanged(auth,async(user)=>{
+onAuthStateChanged(auth, async (user)=>{
 
 if(!user){
 
-showSection("login");
-headerLinks.style.display="none";
+document.getElementById("loginSection").style.display="block";
+document.getElementById("feedSection").style.display="none";
 
 }else{
 
-currentUser=user;
+document.getElementById("loginSection").style.display="none";
+document.getElementById("feedSection").style.display="block";
 
-showSection("feed");
+document.getElementById("headerLinks").style.display="inline";
+document.getElementById("userEmail").innerText=user.email;
 
-headerLinks.style.display="inline";
-
-userEmail.innerText=user.email;
-
-await loadUsers();
-await loadVideos();
+loadUsers();
+loadVideos();
 
 }
 
 });
 
 
+// SIGNUP
+
+signupBtn.onclick=async()=>{
+
+const username=signupUsername.value;
+const email=signupEmail.value;
+const password=signupPassword.value;
+
+const user=await createUserWithEmailAndPassword(auth,email,password);
+
+await setDoc(doc(db,"users",user.user.uid),{
+username,
+email,
+bio:"",
+createdAt:new Date()
+});
+
+};
+
+
+// LOGIN
+
+loginBtn.onclick=async()=>{
+
+await signInWithEmailAndPassword(auth,loginEmail.value,loginPassword.value);
+
+};
+
+
+// USERS
 
 async function loadUsers(){
 
 const snapshot=await getDocs(collection(db,"users"));
 
-let html="<table border='1' cellpadding='5'><tr><th>Username</th><th>Bio</th></tr>";
+let html="<ul>";
 
 snapshot.forEach(docSnap=>{
 
 const data=docSnap.data();
 
-html+=`<tr>
-<td>${data.username}</td>
-<td>${data.bio||""}</td>
-</tr>`;
+html+=`<li>${data.username}</li>`;
 
 });
 
-html+="</table>";
+html+="</ul>";
 
-document.getElementById("userList").innerHTML=html;
+userList.innerHTML=html;
 
 }
 
 
+// LOAD VIDEOS
 
 async function loadVideos(){
 
@@ -284,13 +225,14 @@ const q=query(collection(db,"videos"),orderBy("createdAt","desc"));
 
 const snapshot=await getDocs(q);
 
-let html="<table border='1' cellpadding='5'><tr><th>Title</th><th>Video</th><th>Uploader</th><th>Views</th></tr>";
+videosCache=[];
+
+let html="";
 
 snapshot.forEach(docSnap=>{
 
 const data=docSnap.data();
-
-const videoId=docSnap.id;
+const id=docSnap.id;
 
 let url=data.url;
 
@@ -298,36 +240,93 @@ if(url.includes("/view")){
 url=url.replace("/view","/preview");
 }
 
+videosCache.push({
+id,
+title:data.title,
+user:data.user,
+url
+});
+
 html+=`
 
-<tr>
+<div class="videoCard">
 
-<td>${data.title}</td>
+<iframe src="${url}" width="160" height="90"></iframe>
 
-<td>
-<iframe
-src="${url}"
-width="240"
-height="135"
-allow="autoplay">
-</iframe>
-</td>
+<div>
 
-<td>${data.user}</td>
+<a class="videoTitle" onclick="watchVideo('${id}')">${data.title}</a>
 
-<td>${data.views||0}</td>
+<br>
 
-</tr>
+${data.user}
+
+</div>
+
+</div>
 
 `;
 
 });
 
-html+="</table>";
-
-document.getElementById("videoList").innerHTML=html;
+videoList.innerHTML=html;
 
 }
+
+
+// WATCH PAGE
+
+window.watchVideo=function(id){
+
+const video=videosCache.find(v=>v.id===id);
+
+let side="";
+
+videosCache.forEach(v=>{
+
+if(v.id!==id){
+
+side+=`
+
+<div class="sideVideo" onclick="watchVideo('${v.id}')">
+
+<iframe src="${v.url}" width="120" height="70"></iframe>
+
+<div class="sideVideoTitle">${v.title}</div>
+
+</div>
+
+`;
+
+}
+
+});
+
+videoList.innerHTML=`
+
+<div class="watchPage">
+
+<div class="mainVideo">
+
+<h2>${video.title}</h2>
+
+<iframe src="${video.url}" width="640" height="360"></iframe>
+
+<p>Uploaded by ${video.user}</p>
+
+</div>
+
+<div class="sideVideos">
+
+${side}
+
+</div>
+
+</div>
+
+`;
+
+};
 
 </script>
 
