@@ -262,13 +262,27 @@ async function loadProfile(){
 }
 
 // --- Save Bio ---
-document.getElementById('saveBioBtn').onclick = async ()=>{
-  const bio = document.getElementById('bio').value.trim();
-  await updateDoc(doc(db,"users",currentUser.uid),{bio});
-  document.getElementById('profileStatus').innerText="Bio saved!";
-  await loadProfile();
-}
+document.getElementById('saveBioBtn').onclick = async () => {
+    const bio = document.getElementById('bio').value.trim();
+    try {
+        await updateDoc(doc(db, "users", currentUser.uid), { bio: bio });
+        document.getElementById('profileStatus').innerText = "Bio saved!";
+    } catch (err) {
+        document.getElementById('profileStatus').innerText = "Error saving bio: " + err.message;
+    }
+};
 
+// --- Load Profile ---
+async function loadProfile() {
+    showSection('profile');
+    const docSnap = await getDoc(doc(db, "users", currentUser.uid));
+    if (docSnap.exists()) {
+        document.getElementById('profileUsername').innerText = docSnap.data().username;
+        const createdAt = docSnap.data().createdAt.toDate ? docSnap.data().createdAt.toDate() : new Date(docSnap.data().createdAt.seconds*1000);
+        document.getElementById('profileJoinDate').innerText = createdAt.toDateString();
+        document.getElementById('bio').value = docSnap.data().bio || "";
+    }
+}
 // --- Load User Videos ---
 async function loadUserVideos(){
   const q=query(collection(db,"videos"),orderBy("createdAt","desc"));
