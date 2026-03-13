@@ -30,7 +30,7 @@ body{ font-family:Arial; margin:0; }
 
 .sideVideo{ display:flex; gap:8px; margin-bottom:10px; cursor:pointer; }
 
-.sideVideoTitle{ color:#065fd4; font-size:14px; }
+.sideVideoTitle{ color:#065fd4; font-size:14px; display:flex; align-items:center; }
 
 .avatar{
   width:30px; height:30px; border-radius:50%;
@@ -38,6 +38,7 @@ body{ font-family:Arial; margin:0; }
   font-weight:bold; font-family:Arial,sans-serif; text-transform:none;
   margin-right:5px;
 }
+.studentItem{ display:flex; align-items:center; gap:5px; margin-bottom:5px; }
 </style>
 </head>
 
@@ -153,20 +154,19 @@ myProfileBtn.onclick=()=>{ loadProfile(); };
 function showFeed(){
   document.getElementById("feedSection").style.display="block";
   document.getElementById("profileSection").style.display="none";
+  userList.style.display="block";
   loadVideos();
 }
 
 // --- LOAD USERS ---
 async function loadUsers(){
   const snapshot=await getDocs(collection(db,"users"));
-  let html="<ul>";
+  let html="";
   snapshot.forEach(docSnap=>{
     const data=docSnap.data();
-    const first=data.username.charAt(0);
     const color=getAvatarColor(data.username);
-    html+=`<li><div class="avatar" style="background:${color}">${first}</div>${data.username}</li>`;
+    html+=`<div class="studentItem"><div class="avatar" style="background:${color}">${data.username.charAt(0)}</div>${data.username}</div>`;
   });
-  html+="</ul>";
   userList.innerHTML=html;
 }
 
@@ -181,13 +181,12 @@ async function loadVideos(){
     const id=docSnap.id;
     let url=data.url.includes("/view")?data.url.replace("/view","/preview"):data.url;
     videosCache.push({id,title:data.title,user:data.user,url});
-    const firstLetter=data.user.charAt(0);
     const color=getAvatarColor(data.user);
     html+=`<div class="videoCard">
       <iframe src="${url}" width="160" height="90"></iframe>
       <div>
         <a class="videoTitle" onclick="watchVideo('${id}')">${data.title}</a><br>
-        <div style="display:flex; align-items:center;"><div class="avatar" style="background:${color}">${firstLetter}</div>${data.user}</div>
+        <div style="display:flex;align-items:center;"><div class="avatar" style="background:${color}">${data.user.charAt(0)}</div>${data.user}</div>
       </div>
     </div>`;
   });
@@ -200,14 +199,14 @@ window.watchVideo=function(id){
   let side="";
   videosCache.forEach(v=>{
     if(v.id!==id){
-      const first=v.user.charAt(0);
       const color=getAvatarColor(v.user);
       side+=`<div class="sideVideo" onclick="watchVideo('${v.id}')">
         <iframe src="${v.url}" width="120" height="70"></iframe>
-        <div class="sideVideoTitle"><div class="avatar" style="background:${color}">${first}</div>${v.title}</div>
+        <div class="sideVideoTitle"><div class="avatar" style="background:${color}">${v.user.charAt(0)}</div>${v.title}</div>
       </div>`;
     }
   });
+  userList.style.display="none"; // Hide students while watching video
   videoList.innerHTML=`<div class="watchPage">
     <div class="mainVideo">
       <h2>${video.title}</h2>
@@ -224,6 +223,7 @@ async function loadProfile(){
   if(docSnap.exists()){
     document.getElementById("profileSection").style.display="block";
     document.getElementById("feedSection").style.display="none";
+    userList.style.display="block";
     profileUsername.innerText=docSnap.data().username;
     bio.value=docSnap.data().bio||"";
   }
