@@ -11,19 +11,16 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
     text-transform:none;
 }
 .channelLink { cursor:pointer; color:blue; text-decoration:underline; }
-.tabButton {
-    padding:5px 10px; margin-right:5px; cursor:pointer;
-    background:#CCC; border:1px solid #999;
-}
-.tabButton.active { background:#999; color:white; }
-#uploadSection { display:none; margin-top:10px; }
-.videoTitle { cursor:pointer; color:blue; }
+.videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
 .videoTitle.clicked { color:black; }
 .videoMeta { color:grey; font-size:12px; margin-bottom:5px; }
 #videoPlayerWrapper { display:flex; gap:20px; }
 #videoPlayerMain { flex:2; }
-#otherVideos { flex:1; display:flex; gap:10px; overflow-x:auto; padding-top:5px; }
-#otherVideos div { cursor:pointer; display:flex; flex-direction:column; width:140px; }
+#otherVideos { flex:1; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding-top:5px; }
+#otherVideos div { cursor:pointer; display:flex; flex-direction:column; }
+#homeThumbnails { display:flex; gap:10px; overflow-x:auto; padding-top:5px; margin-bottom:15px; }
+#homeThumbnails div { cursor:pointer; display:flex; flex-direction:column; width:160px; }
+#homeThumbnails iframe { width:160px; height:90px; }
 </style>
 </head>
 
@@ -76,7 +73,7 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 <div id="userList"></div>
 
 <h3>All Videos:</h3>
-<div id="videoFeed"></div>
+<div id="homeThumbnails"></div>
 </div>
 
 <!-- PROFILE -->
@@ -203,10 +200,12 @@ async function loadVideos(){
   let html="";
   snapshot.forEach(doc=>{
     const data = doc.data();
-    const videoId = doc.id;
-    html+=`<div class="videoTitle" onclick="playVideo('${videoId}')">${data.title}</div>`;
+    html+=`<div onclick="playVideo('${doc.id}')">
+      <iframe src="${data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
+      <div class="videoTitle">${data.title}</div>
+    </div>`;
   });
-  document.getElementById('videoFeed').innerHTML=html;
+  document.getElementById('homeThumbnails').innerHTML=html;
 }
 
 // --- Play Video ---
@@ -285,7 +284,7 @@ async function loadUserVideos(){
 }
 
 // --- Home / Profile Buttons ---
-document.getElementById("homeBtn").onclick = ()=>showSection('feed');
+document.getElementById("homeBtn").onclick = ()=>{ showSection('feed'); loadVideos(); };
 document.getElementById("myProfileBtn").onclick = ()=>loadProfile();
 document.getElementById("logoutBtn").onclick = async ()=>await signOut(auth);
 
