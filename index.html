@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -61,7 +62,6 @@ background:#ddd;
 padding:15px;
 border:1px solid #999;
 }
-
 </style>
 </head>
 
@@ -83,7 +83,6 @@ border:1px solid #999;
 </tr>
 </table>
 
-<!-- LOGIN -->
 <div id="loginSection">
 
 <h2>Login / Sign Up</h2>
@@ -111,11 +110,8 @@ Password:<br>
 
 <input type="button" value="Login" id="loginBtn"><br><br>
 
-<span id="status"></span>
-
 </div>
 
-<!-- HOME FEED -->
 <div id="feedSection" style="display:none;padding:20px;">
 
 <h3>Welcome, <span id="userEmail"></span></h3>
@@ -123,7 +119,6 @@ Password:<br>
 <hr>
 
 <h3>Students</h3>
-
 <div id="userList"></div>
 
 <h3>All Videos:</h3>
@@ -134,7 +129,6 @@ Password:<br>
 
 </div>
 
-<!-- PROFILE -->
 <div id="profileSection" style="display:none;padding:20px;">
 
 Username: <b id="profileUsername"></b><br><br>
@@ -160,7 +154,7 @@ URL:<br>
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { getFirestore,doc,setDoc,getDoc,collection,getDocs,addDoc,query,orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getFirestore,doc,setDoc,collection,getDocs,addDoc,query,orderBy } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyC2QdW6Gq3dnFf2JL4-vET-68M6LvTJUvw",
@@ -177,22 +171,7 @@ const db=getFirestore(app);
 
 let allVideos=[];
 
-const avatarColors=[
-"#AA47BD","#7B1FA2","#0388D2","#0098A7",
-"#68A039","#EF6C00","#EC417A","#5D6AC0",
-"#004D40","#34691E","#8C6E63","#512DA7"
-];
-
-function getAvatarColor(name){
-let hash=0;
-for(let i=0;i<name.length;i++){
-hash=name.charCodeAt(i)+((hash<<5)-hash);
-}
-return avatarColors[Math.abs(hash)%avatarColors.length];
-}
-
 function showSection(section){
-
 loginSection.style.display="none";
 feedSection.style.display="none";
 profileSection.style.display="none";
@@ -200,11 +179,9 @@ profileSection.style.display="none";
 if(section==="login") loginSection.style.display="block";
 if(section==="feed") feedSection.style.display="block";
 if(section==="profile") profileSection.style.display="block";
-
 }
 
 signupBtn.onclick=async()=>{
-
 const username=signupUsername.value.trim();
 const email=signupEmail.value.trim();
 const password=signupPassword.value;
@@ -215,7 +192,6 @@ await setDoc(doc(db,"users",cred.user.uid),{
 username,
 bio:""
 });
-
 };
 
 loginBtn.onclick=async()=>{
@@ -237,37 +213,9 @@ userEmail.innerText=user.email;
 
 showSection("feed");
 
-await loadUsers();
-await loadVideos();
+loadVideos();
 
 });
-
-async function loadUsers(){
-
-const snapshot=await getDocs(collection(db,"users"));
-
-let html="<table border='1'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
-
-snapshot.forEach(docu=>{
-
-const d=docu.data();
-const color=getAvatarColor(d.username);
-
-html+=`
-<tr>
-<td><div class="avatar" style="background:${color}">${d.username.charAt(0)}</div></td>
-<td>${d.username}</td>
-<td>${d.bio||""}</td>
-</tr>
-`;
-
-});
-
-html+="</table>";
-
-userList.innerHTML=html;
-
-}
 
 async function loadVideos(){
 
@@ -291,7 +239,7 @@ let html="";
 videos.forEach(v=>{
 
 html+=`
-<div onclick="window.playVideo('${v.id}')">
+<div onclick="playVideo('${v.id}')">
 <iframe src="${v.url.replace('/view','/preview')}" frameborder="0"></iframe>
 <div class="videoTitle">${v.title}</div>
 </div>
@@ -331,10 +279,50 @@ loadVideos();
 };
 
 homeBtn.onclick=()=>showSection("feed");
-
 myProfileBtn.onclick=()=>showSection("profile");
+
+window.playVideo = async function(id){
+
+let video=null;
+
+allVideos.forEach(v=>{
+if(v.id===id) video=v;
+});
+
+if(!video) return;
+
+const url=video.url.replace("/view","/preview");
+
+const popup=document.createElement("div");
+popup.style.position="fixed";
+popup.style.top="50%";
+popup.style.left="50%";
+popup.style.transform="translate(-50%,-50%)";
+popup.style.background="#fff";
+popup.style.padding="20px";
+popup.style.border="2px solid black";
+popup.style.zIndex="9999";
+
+const close=document.createElement("button");
+close.innerText="Close";
+close.onclick=()=>popup.remove();
+
+const player=document.createElement("iframe");
+player.width="560";
+player.height="315";
+player.src=url;
+player.allowFullscreen=true;
+
+popup.appendChild(close);
+popup.appendChild(document.createElement("br"));
+popup.appendChild(player);
+
+document.body.appendChild(popup);
+
+}
 
 </script>
 
 </body>
 </html>
+```
