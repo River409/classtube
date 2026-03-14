@@ -9,8 +9,8 @@
 body{margin:0;font-family:Arial;background:white;}
 
 .avatar{
-width:30px;
-height:30px;
+width:32px;
+height:32px;
 border-radius:50%;
 color:white;
 display:flex;
@@ -23,31 +23,36 @@ cursor:pointer;
 .videoGrid{
 display:grid;
 grid-template-columns:repeat(5,1fr);
-gap:18px;
+gap:20px;
 }
 
-.videoCard{width:160px;cursor:pointer;}
+.videoCard{width:180px;cursor:pointer;}
 
-.videoCard iframe{width:160px;height:90px;}
+.videoCard iframe{width:180px;height:100px;}
 
-.videoTitle{font-size:14px;margin-top:4px;color:blue;}
+.videoTitle{
+font-size:14px;
+margin-top:4px;
+color:#065fd4;
+font-weight:bold;
+}
 
 #videoPlayerWrapper{
 display:flex;
-justify-content:space-between;
+gap:40px;
 }
 
 #otherVideos{
-width:260px;
+width:300px;
+margin-left:auto;
 display:flex;
 flex-direction:column;
-gap:12px;
-margin-left:auto;
+gap:14px;
 }
 
 #otherVideos iframe{
-width:240px;
-height:135px;
+width:280px;
+height:158px;
 }
 
 </style>
@@ -93,8 +98,6 @@ Email<br> <input id="loginEmail"><br><br>
 Password<br> <input type="password" id="loginPassword"><br><br>
 
 <input type="button" value="Login" id="loginBtn"><br><br>
-
-<span id="status"></span>
 
 </div>
 
@@ -148,7 +151,7 @@ Video URL<br> <input id="videoURL"><br><br>
 
 <h3 id="playerTitle" class="videoTitle"></h3>
 
-<div id="playerUploader" style="display:flex;gap:8px;align-items:center;"></div>
+<div id="playerUploader" style="display:flex;gap:10px;align-items:center;"></div>
 
 <iframe id="playerIframe" width="720" height="405" frameborder="0" allowfullscreen></iframe>
 
@@ -188,6 +191,10 @@ const avatarColors=[
 
 function randomColor(){
 return avatarColors[Math.floor(Math.random()*avatarColors.length)];
+}
+
+function getAvatarColor(color){
+return color || randomColor();
 }
 
 function showSection(id){
@@ -254,12 +261,13 @@ let html="<table border=1 cellpadding=5>";
 snap.forEach(docu=>{
 
 let d=docu.data();
+let color=getAvatarColor(d.color);
 
 html+=`
 <tr>
 
 <td>
-<div class="avatar" style="background:${d.color}" onclick="openChannel('${docu.id}','${d.username}')">
+<div class="avatar" style="background:${color}" onclick="openChannel('${docu.id}','${d.username}')">
 ${d.username[0]}
 </div>
 </td>
@@ -360,8 +368,10 @@ playerIframe.src=d.url.replace("/view","/preview");
 let userDoc=await getDoc(doc(db,"users",d.userId));
 let user=userDoc.data();
 
+let color=getAvatarColor(user.color);
+
 playerUploader.innerHTML=`
-<div class="avatar" style="background:${user.color}" onclick="openChannel('${d.userId}','${user.username}')">
+<div class="avatar" style="background:${color}" onclick="openChannel('${d.userId}','${user.username}')">
 ${user.username[0]}
 </div>
 <span onclick="openChannel('${d.userId}','${user.username}')">${user.username}</span>
@@ -402,14 +412,11 @@ postVideoBtn.onclick=async()=>{
 let title=videoTitle.value.trim();
 let url=videoURL.value.trim();
 
-let userDoc=await getDoc(doc(db,"users",currentUser.uid));
-let user=userDoc.data();
-
 await addDoc(collection(db,"videos"),{
 title,
 url,
 userId:currentUser.uid,
-username:user.username
+createdAt:new Date()
 });
 
 loadVideos();
