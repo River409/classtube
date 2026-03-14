@@ -5,10 +5,10 @@
 <style>
 body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 .avatar {
-    width:30px; height:30px; border-radius:50%;
+    width:36px; height:36px; border-radius:50%;
     color:white; display:flex; justify-content:center; align-items:center;
     font-weight:bold; font-family:Arial,sans-serif;
-    text-transform:none;
+    text-transform:none; border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,0.2);
 }
 .channelLink { cursor:pointer; color:blue; text-decoration:underline; }
 .videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
@@ -18,9 +18,11 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 #videoPlayerMain { flex:2; }
 #otherVideos { flex:1; display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding-top:5px; }
 #otherVideos div { cursor:pointer; display:flex; flex-direction:column; }
-#homeThumbnails { display:flex; gap:10px; overflow-x:auto; padding-top:5px; margin-bottom:15px; }
+#homeThumbnails { display:flex; gap:10px; overflow-x:auto; padding-top:5px; margin-bottom:15px; flex-wrap:wrap; }
 #homeThumbnails div { cursor:pointer; display:flex; flex-direction:column; width:160px; }
 #homeThumbnails iframe { width:160px; height:90px; }
+.channelHeader { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+.channelHeader span { font-size:12px; color:grey; }
 </style>
 </head>
 
@@ -66,9 +68,12 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 
 <!-- FEED -->
 <div id="feedSection" style="display:none; padding:20px;">
-<h3>Welcome, <span id="userEmail"></span></h3>
+<div class="channelHeader">
+<h3 id="feedTitle">All Videos</h3>
+<span id="channelJoinDate"></span>
+<button onclick="loadVideos()">All Videos</button>
+</div>
 <hr>
-
 <h3>Students:</h3>
 <div id="userList"></div>
 
@@ -82,7 +87,8 @@ Username: <b id="profileUsername"></b><br>
 Join date: <span id="profileJoinDate"></span><br><br>
 Bio:<br>
 <textarea id="bio" rows="5" cols="40"></textarea><br>
-<input type="button" value="Save Bio" id="saveBioBtn"><br><br>
+<input type="button" value="Save Bio" id="saveBioBtn"><br>
+<div id="profileStatus"></div><br><br>
 
 <h3>My Videos</h3>
 <div id="userVideos"></div>
@@ -138,10 +144,11 @@ document.getElementById('signupBtn').onclick = async ()=>{
   const username = document.getElementById('signupUsername').value.trim();
   const email = document.getElementById('signupEmail').value.trim();
   const password = document.getElementById('signupPassword').value;
+  const birthdate = document.getElementById('signupBirthdate').value;
   if(!username){ status.innerText="Username required"; return; }
   try{
     const userCred = await createUserWithEmailAndPassword(auth,email,password);
-    await setDoc(doc(db,"users",userCred.user.uid),{ username,email,bio:"",createdAt:new Date() });
+    await setDoc(doc(db,"users",userCred.user.uid),{ username,email,birthdate,bio:"",createdAt:new Date() });
     document.getElementById('signupUsername').value="";
     document.getElementById('signupEmail').value="";
     document.getElementById('signupPassword').value="";
@@ -188,7 +195,11 @@ async function loadUsers(){
     const data = doc.data();
     const firstLetter = data.username.charAt(0);
     const color = getAvatarColor(data.username);
-    html+=`<tr><td><div class='avatar' style='background:${color}'>${firstLetter}</div></td><td>${data.username}</td><td>${data.bio||""}</td></tr>`;
+    html+=`<tr>
+      <td><div class='avatar channelLink' style='background:${color}' onclick="showUserVideos('${data.username}')">${firstLetter}</div></td>
+      <td class="channelLink" onclick="showUserVideos('${data.username}')">${data.username}</td>
+      <td>${data.bio||""}</td>
+    </tr>`;
   });
   html+="</table>"; document.getElementById('userList').innerHTML=html;
 }
@@ -206,7 +217,41 @@ async function loadVideos(){
     </div>`;
   });
   document.getElementById('homeThumbnails').innerHTML=html;
+  document.getElementById('feedTitle').innerText="All Videos";
+  document.getElementById('channelJoinDate').innerText="";
 }
+
+// --- Show Videos for a User with Join Date ---
+window.showUserVideos = async function(username){
+  showSection("feed");
+
+  // Get join date
+  const userSnap = await getDocs(collection(db,"users"));
+  let joinDateText = "";
+  userSnap.forEach(doc=>{
+    const data = doc.data();
+    if(data.username===username){
+      const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
+      joinDateText = "Joined: " + createdAt.toDateString();
+    }
+  });
+  document.getElementById('channelJoinDate').innerText = joinDateText;
+
+  const q=query(collection(db,"videos"), orderBy("createdAt","desc"));
+  const snapshot = await getDocs(q);
+  let html = "";
+  snapshot.forEach(doc=>{
+    const data = doc.data();
+    if(data.user === username){
+      html+=`<div onclick="playVideo('${doc.id}')">
+               <iframe src="${data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
+               <div class="videoTitle">${data.title}</div>
+             </div>`;
+    }
+  });
+  document.getElementById('homeThumbnails').innerHTML = html;
+  document.getElementById('feedTitle').innerText=username+"'s Videos";
+};
 
 // --- Play Video ---
 window.playVideo = async function(videoId){
@@ -214,9 +259,11 @@ window.playVideo = async function(videoId){
   const docSnap = await getDoc(doc(db,"videos",videoId));
   if(!docSnap.exists()) return;
   const data = docSnap.data();
+
   await updateDoc(doc(db,"videos",videoId),{
-  views: increment(1)
-});
+    views: increment(1)
+  });
+
   document.getElementById('playerTitle').innerText = data.title;
   document.getElementById('playerTitle').classList.add('clicked');
   const uploaderColor = getAvatarColor(data.user);
@@ -245,18 +292,20 @@ window.playVideo = async function(videoId){
 
 // --- Upload Video ---
 document.getElementById('postVideoBtn').onclick = async ()=>{
-  const title = document.getElementById('videoTitle').value.trim();
-  const url = document.getElementById('videoURL').value.trim();
+  let title = document.getElementById('videoTitle').value.trim();
+  let url = document.getElementById('videoURL').value.trim();
   if(!title||!url){ alert("Title and URL required"); return; }
+  url = url.replace("/view","/preview"); // permanent preview
   await addDoc(collection(db,"videos"),{ title,url,user:currentUser.username,userId:currentUser.uid,createdAt:new Date(),views:0 });
   document.getElementById('videoTitle').value=""; document.getElementById('videoURL').value="";
   await loadVideos(); alert("Video uploaded!");
 }
+
 // --- Save Bio ---
 document.getElementById('saveBioBtn').onclick = async () => {
     const bio = document.getElementById('bio').value.trim();
     try {
-        await updateDoc(doc(db, "users", currentUser.uid), { bio: bio });
+        await updateDoc(doc(db, "users", currentUser.uid), { bio });
         document.getElementById('profileStatus').innerText = "Bio saved!";
     } catch (err) {
         document.getElementById('profileStatus').innerText = "Error saving bio: " + err.message;
@@ -274,6 +323,7 @@ async function loadProfile() {
         document.getElementById('bio').value = docSnap.data().bio || "";
     }
 }
+
 // --- Load User Videos ---
 async function loadUserVideos(){
   const q=query(collection(db,"videos"),orderBy("createdAt","desc"));
