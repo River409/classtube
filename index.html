@@ -214,6 +214,9 @@ window.playVideo = async function(videoId){
   const docSnap = await getDoc(doc(db,"videos",videoId));
   if(!docSnap.exists()) return;
   const data = docSnap.data();
+  await updateDoc(doc(db,"videos",videoId),{
+  views: increment(1)
+});
   document.getElementById('playerTitle').innerText = data.title;
   document.getElementById('playerTitle').classList.add('clicked');
   const uploaderColor = getAvatarColor(data.user);
