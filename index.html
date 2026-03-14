@@ -6,11 +6,7 @@
 
 <style>
 
-body{
-margin:0;
-font-family:Arial;
-background:white;
-}
+body{margin:0;font-family:Arial;background:white;}
 
 .avatar{
 width:30px;
@@ -30,21 +26,11 @@ grid-template-columns:repeat(5,1fr);
 gap:18px;
 }
 
-.videoCard{
-width:160px;
-cursor:pointer;
-}
+.videoCard{width:160px;cursor:pointer;}
 
-.videoCard iframe{
-width:160px;
-height:90px;
-}
+.videoCard iframe{width:160px;height:90px;}
 
-.videoTitle{
-font-size:14px;
-margin-top:4px;
-color:blue;
-}
+.videoTitle{font-size:14px;margin-top:4px;color:blue;}
 
 #videoPlayerWrapper{
 display:flex;
@@ -115,11 +101,9 @@ Password<br> <input type="password" id="loginPassword"><br><br>
 <div id="feedSection" style="display:none;padding:20px">
 
 <h3>Students</h3>
-
 <div id="userList"></div>
 
 <h3>All Videos</h3>
-
 <div id="homeThumbnails" class="videoGrid"></div>
 
 </div>
@@ -127,11 +111,9 @@ Password<br> <input type="password" id="loginPassword"><br><br>
 <div id="channelSection" style="display:none;padding:20px">
 
 <h2 id="channelTitle"></h2>
-
 <div id="channelBio" style="margin-bottom:20px;"></div>
 
 <h3>Videos</h3>
-
 <div id="channelVideos" class="videoGrid"></div>
 
 </div>
@@ -199,8 +181,6 @@ const db=getFirestore(app);
 
 let currentUser=null;
 
-
-
 const avatarColors=[
 "#AA47BD","#7B1FA2","#0388D2","#0098A7","#68A039","#EF6C00",
 "#EC417A","#5D6AC0","#004D40","#34691E","#8C6E63","#512DA7"
@@ -209,8 +189,6 @@ const avatarColors=[
 function randomColor(){
 return avatarColors[Math.floor(Math.random()*avatarColors.length)];
 }
-
-
 
 function showSection(id){
 
@@ -223,8 +201,6 @@ channelSection.style.display="none";
 document.getElementById(id).style.display="block";
 
 }
-
-
 
 signupBtn.onclick=async()=>{
 
@@ -239,34 +215,23 @@ let cred=await createUserWithEmailAndPassword(auth,email,pass);
 await setDoc(doc(db,"users",cred.user.uid),{
 username,
 bio:"",
-color,
-createdAt:new Date()
+color
 });
 
 };
 
-
-
 loginBtn.onclick=async()=>{
-
 await signInWithEmailAndPassword(auth,loginEmail.value,loginPassword.value);
-
 };
 
-
-
 logoutBtn.onclick=()=>signOut(auth);
-
-
 
 onAuthStateChanged(auth,async user=>{
 
 if(!user){
-
 showSection("loginSection");
 headerLinks.style.display="none";
 return;
-
 }
 
 currentUser=user;
@@ -280,8 +245,6 @@ loadVideos();
 
 });
 
-
-
 async function loadUsers(){
 
 let snap=await getDocs(collection(db,"users"));
@@ -293,29 +256,21 @@ snap.forEach(docu=>{
 let d=docu.data();
 
 html+=`
-
 <tr>
 
 <td>
-
 <div class="avatar" style="background:${d.color}" onclick="openChannel('${docu.id}','${d.username}')">
-
 ${d.username[0]}
-
 </div>
-
 </td>
 
 <td onclick="openChannel('${docu.id}','${d.username}')">
-
 ${d.username}
-
 </td>
 
 <td>${d.bio||""}</td>
 
 </tr>
-
 `;
 
 });
@@ -326,12 +281,9 @@ userList.innerHTML=html;
 
 }
 
-
-
 async function loadVideos(){
 
 let q=query(collection(db,"videos"),orderBy("createdAt","desc"));
-
 let snap=await getDocs(q);
 
 let html="";
@@ -341,7 +293,6 @@ snap.forEach(v=>{
 let d=v.data();
 
 html+=`
-
 <div class="videoCard" onclick="playVideo('${v.id}')">
 
 <iframe src="${d.url.replace("/view","/preview")}" frameborder="0"></iframe>
@@ -349,7 +300,6 @@ html+=`
 <div class="videoTitle">${d.title}</div>
 
 </div>
-
 `;
 
 });
@@ -358,8 +308,6 @@ homeThumbnails.innerHTML=html;
 
 }
 
-
-
 window.openChannel=async(uid,username)=>{
 
 showSection("channelSection");
@@ -367,7 +315,6 @@ showSection("channelSection");
 channelTitle.innerText=username+"'s channel";
 
 let userDoc=await getDoc(doc(db,"users",uid));
-
 let data=userDoc.data();
 
 channelBio.innerText=data.bio||"";
@@ -383,7 +330,6 @@ let d=v.data();
 if(d.userId===uid){
 
 html+=`
-
 <div class="videoCard" onclick="playVideo('${v.id}')">
 
 <iframe src="${d.url.replace("/view","/preview")}" frameborder="0"></iframe>
@@ -391,7 +337,6 @@ html+=`
 <div class="videoTitle">${d.title}</div>
 
 </div>
-
 `;
 
 }
@@ -402,46 +347,32 @@ channelVideos.innerHTML=html;
 
 };
 
-
-
 window.playVideo=async(id)=>{
 
 showSection("videoPlayerSection");
 
 let docSnap=await getDoc(doc(db,"videos",id));
-
 let d=docSnap.data();
 
 playerTitle.innerText=d.title;
-
 playerIframe.src=d.url.replace("/view","/preview");
 
 let userDoc=await getDoc(doc(db,"users",d.userId));
-
 let user=userDoc.data();
 
 playerUploader.innerHTML=`
-
 <div class="avatar" style="background:${user.color}" onclick="openChannel('${d.userId}','${user.username}')">
-
 ${user.username[0]}
-
 </div>
-
 <span onclick="openChannel('${d.userId}','${user.username}')">${user.username}</span>
-
 `;
-
-
 
 let snap=await getDocs(collection(db,"videos"));
 
 let vids=[];
 
 snap.forEach(v=>{
-
 if(v.id!==id) vids.push({id:v.id,data:v.data()});
-
 });
 
 vids.sort(()=>Math.random()-0.5);
@@ -451,7 +382,6 @@ let html="";
 vids.slice(0,6).forEach(v=>{
 
 html+=`
-
 <div onclick="playVideo('${v.id}')">
 
 <iframe src="${v.data.url.replace("/view","/preview")}" frameborder="0"></iframe>
@@ -459,7 +389,6 @@ html+=`
 <div class="videoTitle">${v.data.title}</div>
 
 </div>
-
 `;
 
 });
@@ -468,51 +397,37 @@ otherVideos.innerHTML=html;
 
 };
 
-
-
 postVideoBtn.onclick=async()=>{
 
 let title=videoTitle.value.trim();
-
 let url=videoURL.value.trim();
+
+let userDoc=await getDoc(doc(db,"users",currentUser.uid));
+let user=userDoc.data();
 
 await addDoc(collection(db,"videos"),{
 title,
 url,
 userId:currentUser.uid,
-createdAt:new Date()
+username:user.username
 });
 
 loadVideos();
 
 };
 
-
-
 saveBioBtn.onclick=async()=>{
-
-await updateDoc(doc(db,"users",currentUser.uid),{
-bio:bio.value
-});
-
+await updateDoc(doc(db,"users",currentUser.uid),{bio:bio.value});
 };
 
-
-
 homeBtn.onclick=()=>{
-
 showSection("feedSection");
 loadUsers();
 loadVideos();
-
 };
 
-
-
 myProfileBtn.onclick=()=>{
-
 showSection("profileSection");
-
 };
 
 </script>
