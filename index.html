@@ -23,6 +23,8 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 .channelHeader { font-weight:bold; margin-bottom:5px; }
 .channelBio { font-style:italic; margin-bottom:15px; }
 #searchBar { margin-bottom:10px; width:300px; padding:5px; font-size:14px; }
+.userSearchResults { margin-bottom:10px; }
+.userSearchResults div { display:flex; align-items:center; gap:8px; margin-bottom:3px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -70,8 +72,10 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 <h3>Welcome, <span id="userEmail"></span></h3>
 <hr>
 
-<h3>Search Videos:</h3>
-<input type="text" id="searchBar" placeholder="Search by title...">
+<h3>Search Videos / Users:</h3>
+<input type="text" id="searchBar" placeholder="Search by title or user...">
+
+<div class="userSearchResults" id="userSearchResults"></div>
 
 <h3>Students:</h3>
 <div id="userList"></div>
@@ -186,15 +190,18 @@ function showSection(section){
 }
 
 // Load users
+let allUsers = [];
 async function loadUsers(){
   if(document.getElementById("feedSection").style.display!=="block"){ 
     document.getElementById('userList').innerHTML=""; 
     return; 
   }
   const snapshot = await getDocs(collection(db,"users"));
+  allUsers = [];
   let html="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
   snapshot.forEach(doc=>{
     const data = doc.data();
+    allUsers.push({username: data.username, bio: data.bio||""});
     const firstLetter = data.username.charAt(0);
     const color = getAvatarColor(data.username);
     html+=`<tr>
@@ -207,7 +214,7 @@ async function loadUsers(){
 }
 
 // Load videos
-let allVideos = []; // store all videos for search
+let allVideos = [];
 async function loadVideos(){
   const q=query(collection(db,"videos"),orderBy("createdAt","desc"));
   const snapshot = await getDocs(q);
@@ -215,7 +222,7 @@ async function loadVideos(){
   let html="";
   snapshot.forEach(doc=>{
     const data = doc.data();
-    allVideos.push({id: doc.id, title: data.title, url: data.url});
+    allVideos.push({id: doc.id, title: data.title, url: data.url, user: data.user});
     html+=`<div onclick="playVideo('${doc.id}')">
       <iframe src="${data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
       <div class="videoTitle">${data.title}</div>
@@ -224,19 +231,32 @@ async function loadVideos(){
   document.getElementById('homeThumbnails').innerHTML=html;
 }
 
-// Search functionality
+// Search functionality (videos + users)
 document.getElementById('searchBar').addEventListener('input', function(){
-  const query = this.value.toLowerCase();
-  let html="";
+  const queryStr = this.value.toLowerCase();
+  const userResultsDiv = document.getElementById('userSearchResults');
+  let userHtml = "";
+  allUsers.forEach(u=>{
+    if(u.username.toLowerCase().includes(queryStr)){
+      const color = getAvatarColor(u.username);
+      userHtml += `<div onclick="showUserChannel('${u.username}')">
+        <div class='avatar' style='background:${color}'>${u.username.charAt(0)}</div>
+        <span>${u.username}</span>
+      </div>`;
+    }
+  });
+  userResultsDiv.innerHTML = userHtml;
+
+  let videoHtml = "";
   allVideos.forEach(v=>{
-    if(v.title.toLowerCase().includes(query)){
-      html+=`<div onclick="playVideo('${v.id}')">
+    if(v.title.toLowerCase().includes(queryStr)){
+      videoHtml+=`<div onclick="playVideo('${v.id}')">
         <iframe src="${v.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
         <div class="videoTitle">${v.title}</div>
       </div>`;
     }
   });
-  document.getElementById('homeThumbnails').innerHTML=html;
+  document.getElementById('homeThumbnails').innerHTML = videoHtml;
 });
 
 // Show a user’s channel with bio
