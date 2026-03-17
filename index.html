@@ -5,13 +5,13 @@
 <style>
 body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 .avatar {
-    width:30px; height:30px; 
-    border-radius:0; /* square avatars */
-    cursor:pointer; 
-    display:flex; 
-    justify-content:center; 
-    align-items:center;
+    width:30px; height:30px; border-radius:0; /* square avatars */
+    border:1px solid #888; /* tiny outline like old YouTube */
+    color:white; display:flex; justify-content:center; align-items:center;
+    font-weight:bold; font-family:Arial,sans-serif;
+    text-transform:none; cursor:pointer; text-decoration:none;
     background-size:cover;
+    background-position:center;
 }
 .videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
 .videoTitle.clicked { color:black; }
@@ -25,13 +25,15 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 #homeThumbnails iframe { width:160px; height:90px; }
 .channelHeader { font-weight:bold; margin-bottom:5px; }
 .channelBio { font-style:italic; margin-bottom:15px; }
+.tabButtons { margin-bottom:10px; }
+.tabButtons button { margin-right:5px; padding:5px 10px; cursor:pointer; }
 </style>
 </head>
 <body>
 
 <!-- HEADER -->
 <div id="userProfile" style="position:absolute; top:10px; right:15px; display:flex; align-items:center; gap:8px;">
-<img id="userAvatar" src="" style="width:34px; height:34px; border-radius:0; display:none;">
+<img id="userAvatar" src="" style="width:34px; height:34px; border-radius:0; border:1px solid #888; display:none;">
 <span id="usernameDisplay" style="font-weight:500;"></span>
 </div>
 
@@ -72,11 +74,20 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 <h3>Welcome, <span id="userEmail"></span></h3>
 <hr>
 
-<h3>Students:</h3>
-<div id="userList"></div>
+<div class="tabButtons">
+  <button id="videosTab">Videos</button>
+  <button id="peopleTab">People</button>
+</div>
 
-<h3>All Videos:</h3>
-<div id="homeThumbnails"></div>
+<div id="videosSection">
+  <h3>All Videos:</h3>
+  <div id="homeThumbnails"></div>
+</div>
+
+<div id="peopleSection" style="display:none;">
+  <h3>Students:</h3>
+  <div id="userList"></div>
+</div>
 </div>
 
 <!-- PROFILE -->
@@ -130,8 +141,15 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 let currentUser = null;
 
-// Avatar image
-const defaultPFP = "https://i.redd.it/high-resolution-remakes-of-the-old-default-youtube-avatar-v0-bgwxf7bec4ob1.png?width=2160&format=png&auto=webp&s=2bdfee069c06fd8939b9c2bff2c9917ed04771af";
+// Avatar settings
+const defaultAvatar = "https://i.redd.it/high-resolution-remakes-of-the-old-default-youtube-avatar-v0-bgwxf7bec4ob1.png?width=2160&format=png&auto=webp&s=2bdfee069c06fd8939b9c2bff2c9917ed04771af";
+function createAvatar(name){
+  const div = document.createElement("div");
+  div.className="avatar";
+  div.style.backgroundImage=`url('${defaultAvatar}')`;
+  div.title=name;
+  return div;
+}
 
 // Signup
 document.getElementById('signupBtn').onclick = async ()=>{
@@ -190,9 +208,9 @@ async function loadUsers(){
   let html="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
   snapshot.forEach(doc=>{
     const data = doc.data();
-    html+=`<tr>
-      <td><div class='avatar' style='background-image:url(${defaultPFP})' onclick="showUserChannel('${data.username}')"></div></td>
-      <td onclick="showUserChannel('${data.username}')">${data.username}</td>
+    html+=`<tr onclick="showUserProfile('${doc.id}')">
+      <td>${createAvatar(data.username).outerHTML}</td>
+      <td>${data.username}</td>
       <td>${data.bio||""}</td>
     </tr>`;
   });
@@ -214,41 +232,17 @@ async function loadVideos(){
   document.getElementById('homeThumbnails').innerHTML=html;
 }
 
-// Show a user’s channel with bio
-window.showUserChannel = async function(username){
-  showSection("feed");
-  const snapshotUsers = await getDocs(collection(db,"users"));
-  let userData = null;
-  snapshotUsers.forEach(doc=>{
-    const d = doc.data();
-    if(d.username===username) userData = d;
-  });
-  document.getElementById('homeThumbnails').innerHTML="";
-  document.getElementById('userList').innerHTML="";
-  if(userData){
-    const channelHeader = document.createElement("div");
-    channelHeader.className="channelHeader";
-    channelHeader.innerText = username+"'s channel";
-    const channelBio = document.createElement("div");
-    channelBio.className="channelBio";
-    channelBio.innerText = userData.bio||"";
-    document.getElementById('homeThumbnails').appendChild(channelHeader);
-    document.getElementById('homeThumbnails').appendChild(channelBio);
-  }
-
-  const snapshotVideos = await getDocs(collection(db,"videos"));
-  let htmlVideos="";
-  snapshotVideos.forEach(doc=>{
-    const v = doc.data();
-    if(v.user===username){
-      htmlVideos+=`<div onclick="playVideo('${doc.id}')">
-        <iframe src="${v.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
-        <div class="videoTitle">${v.title}</div>
-      </div>`;
-    }
-  });
-  document.getElementById('homeThumbnails').innerHTML += htmlVideos;
-}
+// Show user profile
+window.showUserProfile = async function(uid){
+  showSection('profile');
+  const docSnap = await getDoc(doc(db,"users",uid));
+  if(!docSnap.exists()) return;
+  const data = docSnap.data();
+  document.getElementById('profileUsername').innerText = data.username;
+  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
+  document.getElementById('profileJoinDate').innerText = createdAt.toDateString();
+  document.getElementById('bio').value = data.bio || "";
+};
 
 // Play video
 window.playVideo = async function(videoId){
@@ -258,14 +252,15 @@ window.playVideo = async function(videoId){
   const data = docSnap.data();
   document.getElementById('playerTitle').innerText = data.title;
   document.getElementById('playerUploader').innerHTML=
-    `<div class='avatar' style='background-image:url(${defaultPFP})' onclick="showUserChannel('${data.user}')"></div>
-     <span onclick="showUserChannel('${data.user}')">${data.user}</span>`;
+    `<div class='avatar' style='background-image:url("${defaultAvatar}")'></div>
+     <span>${data.user}</span>`;
   document.getElementById('playerIframe').src = data.url.replace("/view","/preview");
   const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
   const diffMs = new Date() - createdAt;
   const diffDays = Math.floor(diffMs/(1000*60*60*24));
   let agoText = diffDays<30 ? diffDays+" days ago" : Math.floor(diffDays/30)+" months ago";
   document.getElementById('playerStats').innerText = (data.views||0)+" views • "+agoText;
+  // other videos
   const q = query(collection(db,"videos"),orderBy("createdAt","desc"));
   const snapshot = await getDocs(q);
   let htmlOther="";
@@ -278,7 +273,7 @@ window.playVideo = async function(videoId){
     </div>`;
   });
   document.getElementById('otherVideos').innerHTML = htmlOther;
-}
+};
 
 // Upload video
 document.getElementById('postVideoBtn').onclick = async ()=>{
@@ -288,7 +283,7 @@ document.getElementById('postVideoBtn').onclick = async ()=>{
   await addDoc(collection(db,"videos"),{ title,url,user:currentUser.username,userId:currentUser.uid,createdAt:new Date(),views:0 });
   document.getElementById('videoTitle').value=""; document.getElementById('videoURL').value="";
   await loadVideos(); alert("Video uploaded!");
-}
+};
 
 // Save bio
 document.getElementById('saveBioBtn').onclick = async () => {
@@ -299,7 +294,7 @@ document.getElementById('saveBioBtn').onclick = async () => {
     } catch (err) {
         document.getElementById('profileStatus').innerText = "Error saving bio: " + err.message;
     }
-}
+};
 
 // Load profile
 async function loadProfile() {
@@ -325,6 +320,16 @@ async function loadUserVideos(){
   });
   document.getElementById('userVideos').innerHTML=html;
 }
+
+// Tabs
+document.getElementById('videosTab').onclick = ()=>{
+  document.getElementById('videosSection').style.display="block";
+  document.getElementById('peopleSection').style.display="none";
+};
+document.getElementById('peopleTab').onclick = ()=>{
+  document.getElementById('videosSection').style.display="none";
+  document.getElementById('peopleSection').style.display="block";
+};
 
 // Home/Profile buttons
 document.getElementById("homeBtn").onclick = ()=>{ showSection('feed'); loadVideos(); loadUsers(); };
