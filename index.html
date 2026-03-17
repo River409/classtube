@@ -120,7 +120,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebas
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey:"AIzaSyC2QdW6Gq3dnFf2JL4-vET-68M6LvTJUvw",
   authDomain:"classtube2-1436a.firebaseapp.com",
@@ -135,14 +134,9 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 let currentUser = null;
 
-// Avatar colors
 const avatarColors = ["#AA47BD","#7B1FA2","#77919D","#455A65","#EC417A","#C1175C","#5D6AC0","#0388D2","#00579B","#0098A7","#00897B","#004D40","#68A039","#34691E","#8C6E63","#5D4138","#7D57C1","#512DA7","#EF6C00","#F6511E","#BE360B"];
-function getAvatarColor(name){
-  let hash=0; for(let i=0;i<name.length;i++){hash=name.charCodeAt(i)+((hash<<5)-hash);}
-  return avatarColors[Math.abs(hash)%avatarColors.length];
-}
+function getAvatarColor(name){ let hash=0; for(let i=0;i<name.length;i++){hash=name.charCodeAt(i)+((hash<<5)-hash);} return avatarColors[Math.abs(hash)%avatarColors.length]; }
 
-// Signup
 document.getElementById('signupBtn').onclick = async ()=>{
   const username = document.getElementById('signupUsername').value.trim();
   const email = document.getElementById('signupEmail').value.trim();
@@ -158,7 +152,6 @@ document.getElementById('signupBtn').onclick = async ()=>{
   }catch(err){ status.innerText=err.message; }
 };
 
-// Login
 document.getElementById('loginBtn').onclick = async ()=>{
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
@@ -166,7 +159,6 @@ document.getElementById('loginBtn').onclick = async ()=>{
   catch(err){ status.innerText=err.message; }
 };
 
-// Auth state
 const status = document.getElementById('status');
 const headerLinks = document.getElementById('headerLinks');
 const userEmail = document.getElementById('userEmail');
@@ -181,7 +173,6 @@ onAuthStateChanged(auth, async (user)=>{
   }
 });
 
-// Show sections
 function showSection(section){
   document.getElementById("loginSection").style.display = (section==="login")?"block":"none";
   document.getElementById("feedSection").style.display = (section==="feed")?"block":"none";
@@ -189,43 +180,36 @@ function showSection(section){
   document.getElementById("videoPlayerSection").style.display = (section==="player")?"block":"none";
 }
 
-// Users + videos
 let allUsers = [];
 let allVideos = [];
 
-// Load users
+// Load users and videos
 async function loadUsers(){
-  if(document.getElementById("feedSection").style.display!=="block"){ 
-    document.getElementById('userList').innerHTML=""; 
-    return; 
-  }
   const snapshot = await getDocs(collection(db,"users"));
   allUsers = [];
   let html="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
   snapshot.forEach(doc=>{
     const data = doc.data();
-    allUsers.push({username: data.username, bio: data.bio||""});
-    const firstLetter = data.username.charAt(0);
-    const color = getAvatarColor(data.username);
+    allUsers.push({username:data.username,bio:data.bio||""});
+    const color=getAvatarColor(data.username);
     html+=`<tr>
-      <td><div class='avatar' style='background:${color}' onclick="showUserChannel('${data.username}')">${firstLetter}</div></td>
+      <td><div class='avatar' style='background:${color}' onclick="showUserChannel('${data.username}')">${data.username.charAt(0)}</div></td>
       <td onclick="showUserChannel('${data.username}')">${data.username}</td>
       <td>${data.bio||""}</td>
     </tr>`;
   });
-  html+="</table>"; 
+  html+="</table>";
   document.getElementById('userList').innerHTML=html;
 }
 
-// Load videos
 async function loadVideos(){
   const q=query(collection(db,"videos"),orderBy("createdAt","desc"));
   const snapshot = await getDocs(q);
-  allVideos = [];
+  allVideos=[];
   let html="";
   snapshot.forEach(doc=>{
     const data = doc.data();
-    allVideos.push({id: doc.id, title: data.title, url: data.url, user: data.user});
+    allVideos.push({id:doc.id,title:data.title,url:data.url,user:data.user});
     html+=`<div onclick="playVideo('${doc.id}')">
       <iframe src="${data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
       <div class="videoTitle">${data.title}</div>
@@ -234,21 +218,26 @@ async function loadVideos(){
   document.getElementById('homeThumbnails').innerHTML=html;
 }
 
+// Event delegation for user search clicks
+document.getElementById('userSearchResults').addEventListener('click', e=>{
+  let target=e.target;
+  while(target && !target.dataset.username && target!==document.getElementById('userSearchResults')) target=target.parentElement;
+  if(target && target.dataset.username){ showUserChannel(target.dataset.username); }
+});
+
 // Search bar logic
 document.getElementById('searchBar').addEventListener('input', function(){
-  const queryStr = this.value.toLowerCase().trim();
-  const userResultsDiv = document.getElementById('userSearchResults');
-  const userTable = document.getElementById('userList');
+  const queryStr=this.value.toLowerCase().trim();
+  const userResultsDiv=document.getElementById('userSearchResults');
+  const userTable=document.getElementById('userList');
 
   if(queryStr===""){
-    // show table, hide search results
     userResultsDiv.style.display="none";
     userTable.style.display="block";
     loadVideos();
     return;
   }
 
-  // Hide table and show search results
   userTable.style.display="none";
   userResultsDiv.style.display="block";
 
@@ -256,8 +245,8 @@ document.getElementById('searchBar').addEventListener('input', function(){
   let userHtml="";
   allUsers.forEach(u=>{
     if(u.username.toLowerCase().includes(queryStr)){
-      const color = getAvatarColor(u.username);
-      userHtml += `<div onclick="showUserChannel('${u.username}')">
+      const color=getAvatarColor(u.username);
+      userHtml+=`<div data-username="${u.username}">
         <div class='avatar' style='background:${color}'>${u.username.charAt(0)}</div>
         <span>${u.username}</span>
       </div>`;
@@ -278,15 +267,12 @@ document.getElementById('searchBar').addEventListener('input', function(){
   document.getElementById('homeThumbnails').innerHTML=videoHtml;
 });
 
-// ... Keep the rest of your existing functions unchanged (playVideo, showUserChannel, profile, upload etc.) 
-// Home/Profile buttons
+// The rest of your functions (playVideo, showUserChannel, profile, upload) remain unchanged
 document.getElementById("homeBtn").onclick = ()=>{ showSection('feed'); loadVideos(); loadUsers(); };
 document.getElementById("myProfileBtn").onclick = ()=>loadProfile();
 document.getElementById("logoutBtn").onclick = async ()=>await signOut(auth);
 
-// Initial
 showSection("login");
 </script>
-
 </body>
 </html>
