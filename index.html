@@ -75,7 +75,7 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 <h3>Search Videos / Users:</h3>
 <input type="text" id="searchBar" placeholder="Search by title or user...">
 
-<div class="userSearchResults" id="userSearchResults" style="display:none;"></div>
+<div class="userSearchResults" id="userSearchResults"></div>
 
 <h3>Students:</h3>
 <div id="userList"></div>
@@ -120,6 +120,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebas
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey:"AIzaSyC2QdW6Gq3dnFf2JL4-vET-68M6LvTJUvw",
   authDomain:"classtube2-1436a.firebaseapp.com",
@@ -134,9 +135,14 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 let currentUser = null;
 
+// Avatar colors
 const avatarColors = ["#AA47BD","#7B1FA2","#77919D","#455A65","#EC417A","#C1175C","#5D6AC0","#0388D2","#00579B","#0098A7","#00897B","#004D40","#68A039","#34691E","#8C6E63","#5D4138","#7D57C1","#512DA7","#EF6C00","#F6511E","#BE360B"];
-function getAvatarColor(name){ let hash=0; for(let i=0;i<name.length;i++){hash=name.charCodeAt(i)+((hash<<5)-hash);} return avatarColors[Math.abs(hash)%avatarColors.length]; }
+function getAvatarColor(name){
+  let hash=0; for(let i=0;i<name.length;i++){hash=name.charCodeAt(i)+((hash<<5)-hash);}
+  return avatarColors[Math.abs(hash)%avatarColors.length];
+}
 
+// Signup
 document.getElementById('signupBtn').onclick = async ()=>{
   const username = document.getElementById('signupUsername').value.trim();
   const email = document.getElementById('signupEmail').value.trim();
@@ -152,6 +158,7 @@ document.getElementById('signupBtn').onclick = async ()=>{
   }catch(err){ status.innerText=err.message; }
 };
 
+// Login
 document.getElementById('loginBtn').onclick = async ()=>{
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
@@ -159,6 +166,7 @@ document.getElementById('loginBtn').onclick = async ()=>{
   catch(err){ status.innerText=err.message; }
 };
 
+// Auth state
 const status = document.getElementById('status');
 const headerLinks = document.getElementById('headerLinks');
 const userEmail = document.getElementById('userEmail');
@@ -173,6 +181,7 @@ onAuthStateChanged(auth, async (user)=>{
   }
 });
 
+// Show sections
 function showSection(section){
   document.getElementById("loginSection").style.display = (section==="login")?"block":"none";
   document.getElementById("feedSection").style.display = (section==="feed")?"block":"none";
@@ -180,36 +189,40 @@ function showSection(section){
   document.getElementById("videoPlayerSection").style.display = (section==="player")?"block":"none";
 }
 
+// Load users
 let allUsers = [];
-let allVideos = [];
-
-// Load users and videos
 async function loadUsers(){
+  if(document.getElementById("feedSection").style.display!=="block"){ 
+    document.getElementById('userList').innerHTML=""; 
+    return; 
+  }
   const snapshot = await getDocs(collection(db,"users"));
   allUsers = [];
   let html="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
   snapshot.forEach(doc=>{
     const data = doc.data();
-    allUsers.push({username:data.username,bio:data.bio||""});
-    const color=getAvatarColor(data.username);
+    allUsers.push({username: data.username, bio: data.bio||""});
+    const firstLetter = data.username.charAt(0);
+    const color = getAvatarColor(data.username);
     html+=`<tr>
-      <td><div class='avatar' style='background:${color}' onclick="showUserChannel('${data.username}')">${data.username.charAt(0)}</div></td>
+      <td><div class='avatar' style='background:${color}' onclick="showUserChannel('${data.username}')">${firstLetter}</div></td>
       <td onclick="showUserChannel('${data.username}')">${data.username}</td>
       <td>${data.bio||""}</td>
     </tr>`;
   });
-  html+="</table>";
-  document.getElementById('userList').innerHTML=html;
+  html+="</table>"; document.getElementById('userList').innerHTML=html;
 }
 
+// Load videos
+let allVideos = [];
 async function loadVideos(){
   const q=query(collection(db,"videos"),orderBy("createdAt","desc"));
   const snapshot = await getDocs(q);
-  allVideos=[];
+  allVideos = [];
   let html="";
   snapshot.forEach(doc=>{
     const data = doc.data();
-    allVideos.push({id:doc.id,title:data.title,url:data.url,user:data.user});
+    allVideos.push({id: doc.id, title: data.title, url: data.url, user: data.user});
     html+=`<div onclick="playVideo('${doc.id}')">
       <iframe src="${data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
       <div class="videoTitle">${data.title}</div>
@@ -218,44 +231,23 @@ async function loadVideos(){
   document.getElementById('homeThumbnails').innerHTML=html;
 }
 
-// Event delegation for user search clicks
-document.getElementById('userSearchResults').addEventListener('click', e=>{
-  let target=e.target;
-  while(target && !target.dataset.username && target!==document.getElementById('userSearchResults')) target=target.parentElement;
-  if(target && target.dataset.username){ showUserChannel(target.dataset.username); }
-});
-
-// Search bar logic
+// Search functionality (videos + users)
 document.getElementById('searchBar').addEventListener('input', function(){
-  const queryStr=this.value.toLowerCase().trim();
-  const userResultsDiv=document.getElementById('userSearchResults');
-  const userTable=document.getElementById('userList');
-
-  if(queryStr===""){
-    userResultsDiv.style.display="none";
-    userTable.style.display="block";
-    loadVideos();
-    return;
-  }
-
-  userTable.style.display="none";
-  userResultsDiv.style.display="block";
-
-  // Users
-  let userHtml="";
+  const queryStr = this.value.toLowerCase();
+  const userResultsDiv = document.getElementById('userSearchResults');
+  let userHtml = "";
   allUsers.forEach(u=>{
     if(u.username.toLowerCase().includes(queryStr)){
-      const color=getAvatarColor(u.username);
-      userHtml+=`<div data-username="${u.username}">
+      const color = getAvatarColor(u.username);
+      userHtml += `<div onclick="showUserChannel('${u.username}')">
         <div class='avatar' style='background:${color}'>${u.username.charAt(0)}</div>
         <span>${u.username}</span>
       </div>`;
     }
   });
-  userResultsDiv.innerHTML=userHtml;
+  userResultsDiv.innerHTML = userHtml;
 
-  // Videos
-  let videoHtml="";
+  let videoHtml = "";
   allVideos.forEach(v=>{
     if(v.title.toLowerCase().includes(queryStr)){
       videoHtml+=`<div onclick="playVideo('${v.id}')">
@@ -264,15 +256,131 @@ document.getElementById('searchBar').addEventListener('input', function(){
       </div>`;
     }
   });
-  document.getElementById('homeThumbnails').innerHTML=videoHtml;
+  document.getElementById('homeThumbnails').innerHTML = videoHtml;
 });
 
-// The rest of your functions (playVideo, showUserChannel, profile, upload) remain unchanged
+// Show a user’s channel with bio
+window.showUserChannel = async function(username){
+  showSection("feed");
+  const snapshotUsers = await getDocs(collection(db,"users"));
+  let userData = null;
+  snapshotUsers.forEach(doc=>{
+    const d = doc.data();
+    if(d.username===username) userData = d;
+  });
+  document.getElementById('homeThumbnails').innerHTML="";
+  document.getElementById('userList').innerHTML="";
+  if(userData){
+    const channelHeader = document.createElement("div");
+    channelHeader.className="channelHeader";
+    channelHeader.innerText = username+"'s channel";
+    const channelBio = document.createElement("div");
+    channelBio.className="channelBio";
+    channelBio.innerText = userData.bio||"";
+    document.getElementById('homeThumbnails').appendChild(channelHeader);
+    document.getElementById('homeThumbnails').appendChild(channelBio);
+  }
+
+  const snapshotVideos = await getDocs(collection(db,"videos"));
+  let htmlVideos="";
+  snapshotVideos.forEach(doc=>{
+    const v = doc.data();
+    if(v.user===username){
+      htmlVideos+=`<div onclick="playVideo('${doc.id}')">
+        <iframe src="${v.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
+        <div class="videoTitle">${v.title}</div>
+      </div>`;
+    }
+  });
+  document.getElementById('homeThumbnails').innerHTML += htmlVideos;
+}
+
+// Play video
+window.playVideo = async function(videoId){
+  showSection("player");
+  const docSnap = await getDoc(doc(db,"videos",videoId));
+  if(!docSnap.exists()) return;
+  const data = docSnap.data();
+  document.getElementById('playerTitle').innerText = data.title;
+  const uploaderColor = getAvatarColor(data.user);
+  document.getElementById('playerUploader').innerHTML=
+    `<div class='avatar' style='background:${uploaderColor}' onclick="showUserChannel('${data.user}')">${data.user.charAt(0)}</div>
+     <span onclick="showUserChannel('${data.user}')">${data.user}</span>`;
+  document.getElementById('playerIframe').src = data.url.replace("/view","/preview");
+  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
+  const diffMs = new Date() - createdAt;
+  const diffDays = Math.floor(diffMs/(1000*60*60*24));
+  let agoText = diffDays<30 ? diffDays+" days ago" : Math.floor(diffDays/30)+" months ago";
+  document.getElementById('playerStats').innerText = (data.views||0)+" views • "+agoText;
+  // other videos
+  const q = query(collection(db,"videos"),orderBy("createdAt","desc"));
+  const snapshot = await getDocs(q);
+  let htmlOther="";
+  snapshot.forEach(d=>{
+    if(d.id===videoId) return;
+    const v = d.data();
+    htmlOther+=`<div onclick="playVideo('${d.id}')">
+      <div>${v.title}</div>
+      <iframe width="140" height="80" src="${v.url.replace("/view","/preview")}" frameborder="0"></iframe>
+    </div>`;
+  });
+  document.getElementById('otherVideos').innerHTML = htmlOther;
+}
+
+// Upload video
+document.getElementById('postVideoBtn').onclick = async ()=>{
+  const title = document.getElementById('videoTitle').value.trim();
+  const url = document.getElementById('videoURL').value.trim();
+  if(!title||!url){ alert("Title and URL required"); return; }
+  await addDoc(collection(db,"videos"),{ title,url,user:currentUser.username,userId:currentUser.uid,createdAt:new Date(),views:0 });
+  document.getElementById('videoTitle').value=""; document.getElementById('videoURL').value="";
+  await loadVideos(); alert("Video uploaded!");
+}
+
+// Save bio
+document.getElementById('saveBioBtn').onclick = async () => {
+    const bio = document.getElementById('bio').value.trim();
+    try {
+        await updateDoc(doc(db, "users", currentUser.uid), { bio });
+        document.getElementById('profileStatus').innerText = "Bio saved!";
+    } catch (err) {
+        document.getElementById('profileStatus').innerText = "Error saving bio: " + err.message;
+    }
+}
+
+// Load profile
+async function loadProfile() {
+    showSection('profile');
+    const docSnap = await getDoc(doc(db, "users",currentUser.uid));
+    if (docSnap.exists()) {
+        document.getElementById('profileUsername').innerText = docSnap.data().username;
+        const createdAt = docSnap.data().createdAt.toDate ? docSnap.data().createdAt.toDate() : new Date(docSnap.data().createdAt.seconds*1000);
+        document.getElementById('profileJoinDate').innerText = createdAt.toDateString();
+        document.getElementById('bio').value = docSnap.data().bio || "";
+    }
+}
+
+// Load user videos
+async function loadUserVideos(){
+  const snapshot = await getDocs(collection(db,"videos"));
+  let html="";
+  snapshot.forEach(doc=>{
+    const data = doc.data();
+    if(data.user===currentUser.username){
+      html+=`<div class="videoTitle" onclick="playVideo('${doc.id}')">${data.title}</div>`;
+    }
+  });
+  document.getElementById('userVideos').innerHTML=html;
+}
+
+// Home/Profile buttons
 document.getElementById("homeBtn").onclick = ()=>{ showSection('feed'); loadVideos(); loadUsers(); };
 document.getElementById("myProfileBtn").onclick = ()=>loadProfile();
 document.getElementById("logoutBtn").onclick = async ()=>await signOut(auth);
 
+// Initial
 showSection("login");
 </script>
+
 </body>
 </html>
