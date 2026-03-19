@@ -14,7 +14,6 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
     background-position:center;
 }
 .videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
-.videoTitle.clicked { color:black; }
 .videoMeta { color:grey; font-size:12px; margin-bottom:5px; }
 #videoPlayerWrapper { display:flex; gap:20px; }
 #videoPlayerMain { flex:2; }
@@ -23,8 +22,6 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 #homeThumbnails { display:flex; flex-wrap:wrap; gap:10px; padding-top:5px; margin-bottom:15px; }
 #homeThumbnails div { cursor:pointer; display:flex; flex-direction:column; width:160px; }
 #homeThumbnails iframe { width:160px; height:90px; }
-.channelHeader { font-weight:bold; margin-bottom:5px; }
-.channelBio { font-style:italic; margin-bottom:15px; }
 .tabButtons { margin-bottom:10px; }
 .tabButtons button { margin-right:5px; padding:5px 10px; cursor:pointer; }
 </style>
@@ -95,7 +92,6 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 Username: <b id="profileUsername"></b><br>
 Join date: <span id="profileJoinDate"></span><br><br>
 
-<!-- Bio (editable only on own profile) -->
 <div id="bioContainer">
   Bio:<br>
   <textarea id="bio" rows="5" cols="40"></textarea><br>
@@ -107,7 +103,6 @@ Join date: <span id="profileJoinDate"></span><br><br>
 <h3>Videos</h3>
 <div id="userVideos"></div>
 
-<!-- Upload Video (hidden on other profiles) -->
 <div id="uploadSection">
 Title:<br><input type="text" id="videoTitle"><br>
 Video URL:<br><input type="text" id="videoURL"><br>
@@ -119,12 +114,12 @@ Video URL:<br><input type="text" id="videoURL"><br>
 <div id="videoPlayerSection" style="display:none; padding:20px;">
 <div id="videoPlayerWrapper">
 <div id="videoPlayerMain">
-<h3 id="playerTitle" class="videoTitle"></h3>
+<h3 id="playerTitle"></h3>
 <div id="playerUploader" style="display:flex; align-items:center; gap:8px;"></div>
 <iframe id="playerIframe" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe>
 <div id="playerStats" class="videoMeta"></div>
 
-<!-- COMMENTS (no UI changes) -->
+<!-- COMMENTS -->
 <div id="commentsList" style="max-height:200px; overflow-y:auto; border:1px solid #ccc; padding:5px; margin-top:5px;"></div>
 <input id="commentInput" placeholder="Write a comment" style="width:80%; margin-top:5px;">
 <button id="commentBtn" style="margin-top:5px;">Post</button>
@@ -174,52 +169,59 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   currentUser = user;
+});
 
-  // Comments
-  const commentsList = document.getElementById("commentsList");
-  const commentInput = document.getElementById("commentInput");
-  const commentBtn = document.getElementById("commentBtn");
+// ------------- COMMENTS + VIEW COUNTER -------------
+const commentsList = document.getElementById("commentsList");
+const commentInput = document.getElementById("commentInput");
+const commentBtn = document.getElementById("commentBtn");
 
-  commentBtn.onclick = async () => {
-    if (!commentInput.value || !currentVideoId || !currentUser) return;
-    await addDoc(collection(db,"comments"),{
-      videoId: currentVideoId,
-      user: currentUser.email,
-      text: commentInput.value,
-      createdAt: new Date()
-    });
-    commentInput.value = "";
-    loadComments();
-  };
+// Wrap existing playVideo
+const originalPlayVideo = window.playVideo;
+window.playVideo = async function(videoId){
+  currentVideoId = videoId;
 
-  async function loadComments(){
-    if(!currentVideoId) return;
-    const snap = await getDocs(collection(db,"comments"));
-    let html = "";
-    snap.forEach(doc=>{
-      const c = doc.data();
-      if(c.videoId===currentVideoId){
-        html += `<div><b>${c.user}</b>: ${c.text}</div>`;
-      }
-    });
-    commentsList.innerHTML = html;
+  // Increment views
+  const docRef = doc(db,"videos",videoId);
+  const snap = await getDoc(docRef);
+  if(snap.exists()){
+    const v = snap.data();
+    await updateDoc(docRef, { views: (v.views||0)+1 });
   }
 
-  // Wrap original playVideo for views and load comments
-  const originalPlayVideo = window.playVideo;
-  window.playVideo = async function(videoId){
-    currentVideoId = videoId;
-    const docRef = doc(db,"videos",videoId);
-    const snap = await getDoc(docRef);
-    if(snap.exists()){
-      const v = snap.data();
-      await updateDoc(docRef, { views: (v.views||0)+1 });
+  // Call original playVideo
+  if(originalPlayVideo) await originalPlayVideo(videoId);
+
+  // Load comments
+  loadComments();
+};
+
+// Comment posting
+commentBtn.onclick = async () => {
+  if (!commentInput.value || !currentVideoId || !currentUser) return;
+  await addDoc(collection(db,"comments"),{
+    videoId: currentVideoId,
+    user: currentUser.email,
+    text: commentInput.value,
+    createdAt: new Date()
+  });
+  commentInput.value = "";
+  loadComments();
+};
+
+async function loadComments(){
+  if(!currentVideoId) return;
+  const snap = await getDocs(collection(db,"comments"));
+  let html = "";
+  snap.forEach(doc=>{
+    const c = doc.data();
+    if(c.videoId===currentVideoId){
+      html += `<div><b>${c.user}</b>: ${c.text}</div>`;
     }
-    if(originalPlayVideo) await originalPlayVideo(videoId);
-    loadComments();
-  };
-});
-// ---------------- END ADDITIONS -----------------
+  });
+  commentsList.innerHTML = html;
+}
+// ---------------------------------------------------
 
 function showSection(section){
   document.getElementById("loginSection").style.display = (section==="login")?"block":"none";
