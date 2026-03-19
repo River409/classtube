@@ -10,7 +10,7 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
     display:flex; justify-content:center; align-items:center;
     font-weight:bold; color:white;
 }
-#peopleTable img { width:40px; height:40px; border-radius:0; border:1px solid #888; } /* square avatars with outline */
+#peopleTable img { width:40px; height:40px; border-radius:0; border:1px solid #888; } 
 .videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
 .videoMeta { color:grey; font-size:12px; margin-bottom:5px; }
 #videoPlayerWrapper { display:flex; gap:20px; }
@@ -25,11 +25,12 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 #signupSection { margin-top:30px; }
 .input-group { margin-bottom:10px; display:flex; flex-direction:column; }
 .tabBtn { padding:5px 10px; font-size:14px; margin-right:5px; cursor:pointer; }
-#saveBioBtn { padding:5px 10px; font-size:12px; cursor:pointer; }
+#saveBioBtn { padding:5px 10px; font-size:14px; cursor:pointer; display:inline-block; margin-top:5px; }
 #bioInput { width:200px; height:50px; }
 #peopleTable { width:100%; border-collapse:collapse; margin-top:10px; }
 #peopleTable th, #peopleTable td { border:1px solid #ccc; padding:5px; text-align:left; }
 a { cursor:pointer; color:blue; text-decoration:underline; }
+#headerLinks a:active { color:red; }
 </style>
 </head>
 <body>
@@ -51,7 +52,6 @@ a { cursor:pointer; color:blue; text-decoration:underline; }
 </tr>
 </table>
 
-<!-- LOGIN -->
 <div id="loginSection">
 <h2>Login</h2>
 <div class="input-group"><label>Email:</label><input id="loginEmail" placeholder="Email"></div>
@@ -59,7 +59,6 @@ a { cursor:pointer; color:blue; text-decoration:underline; }
 <button id="loginBtn">Login</button>
 </div>
 
-<!-- SIGNUP -->
 <div id="signupSection">
 <h2>Sign Up</h2>
 <div class="input-group"><label>Username:</label><input id="signupUsername" placeholder="Username"></div>
@@ -138,14 +137,16 @@ const db = getFirestore(app);
 let currentUser=null;
 let currentVideoId=null;
 const HOME_LIMIT=25, SIDE_LIMIT=6;
-const defaultAvatar="https://i.redd.it/high-resolution-remakes-of-the-old-default-youtube-avatar-v0-bgwxf7bec4ob1.png";
+const defaultAvatar="https://i.redd.it/high-resolution-remakes-of-the-old-default-youtube-avatar-v0-bgwxf7bec4ob1.png?width=2160&format=png&auto=webp&s=2bdfee069c06fd8939b9c2bff2c9917ed04771af";
 
 // AUTH
 signupBtn.onclick = async ()=>{
   const user = await createUserWithEmailAndPassword(auth, signupEmail.value, signupPassword.value);
   await setDoc(doc(db,"users",user.user.uid),{
-    username:signupUsername.value,
-    birthdate:signupBirthdate.value
+    username: signupUsername.value,
+    birthdate: signupBirthdate.value,
+    createdAt: Date.now(),
+    avatar: defaultAvatar
   });
 };
 
@@ -223,7 +224,7 @@ window.playVideo=async(id)=>{
   otherVideos.innerHTML=html;
 };
 
-// LOAD COMMENTS
+// COMMENTS
 async function loadComments(){
   const snap=await getDocs(collection(db,"comments"));
   let html="";
@@ -233,8 +234,6 @@ async function loadComments(){
   });
   commentsList.innerHTML=html;
 }
-
-// POST COMMENT
 commentBtn.onclick=async ()=>{
   if(!commentInput.value) return;
   await addDoc(collection(db,"comments"),{
@@ -268,12 +267,13 @@ async function loadUserList(){
   let html="";
   usersSnap.forEach(doc=>{
     const u=doc.data();
-    const avatar=u.avatar||defaultAvatar;
+    const avatar = defaultAvatar; // always use the direct image
+    const joinDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A";
     html+=`<tr>
       <td><img src="${avatar}"></td>
       <td><a onclick="openChannel('${doc.id}')">${u.username||u.email}</a></td>
       <td><a onclick="openChannel('${doc.id}')">Channel</a></td>
-      <td>${new Date(u.joinTime||0).toLocaleDateString()}</td>
+      <td>${joinDate}</td>
     </tr>`;
   });
   userList.innerHTML=html;
@@ -284,7 +284,7 @@ async function openChannel(uid){
   feedSection.style.display="none";
   videoPlayerSection.style.display="none";
   profileSection.style.display="block";
-  myProfileBtn.style.display="none"; // hide My Profile button
+  myProfileBtn.style.display="none";
 
   const docRef=doc(db,"users",uid);
   const docSnap=await getDoc(docRef);
@@ -319,7 +319,7 @@ function loadProfile(){
       bioInput.value=data.bio||"";
     }
   });
-  myProfileBtn.style.display="inline"; // show My Profile button on own profile
+  myProfileBtn.style.display="inline";
 }
 saveBioBtn.onclick=async()=>{
   await updateDoc(doc(db,"users",currentUser.uid),{bio: bioInput.value});
