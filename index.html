@@ -25,6 +25,7 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 </head>
 <body>
 
+<!-- HEADER -->
 <div id="userProfile" style="position:absolute; top:10px; right:15px;">
 <span id="usernameDisplay"></span>
 </div>
@@ -42,6 +43,7 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 </tr>
 </table>
 
+<!-- LOGIN -->
 <div id="loginSection" style="width:300px; margin:50px auto; background:#DDD; padding:10px;">
 <h2>Login / Sign Up</h2>
 
@@ -59,6 +61,7 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 <div id="status"></div>
 </div>
 
+<!-- FEED -->
 <div id="feedSection" style="display:none; padding:20px;">
 <h3>Welcome, <span id="userEmail"></span></h3>
 
@@ -75,6 +78,7 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 </div>
 </div>
 
+<!-- PLAYER -->
 <div id="videoPlayerSection" style="display:none; padding:20px;">
 <div id="videoPlayerWrapper">
 <div id="videoPlayerMain">
@@ -137,6 +141,7 @@ onAuthStateChanged(auth, async user=>{
   userEmail.innerText = user.email;
 
   loadVideos();
+  loadUserList(); // original feature
 });
 
 // LOAD VIDEOS
@@ -245,6 +250,15 @@ videosTab.onclick = ()=>{
 peopleTab.onclick = ()=>{
   videosSection.style.display="none";
   peopleSection.style.display="block";
+};
+
+// ORIGINAL sidebar/user features
+function loadUserList(){
+  // keep your existing user list code for the "People" tab
+}
+
+myProfileBtn.onclick = ()=>{
+  // keep your original profile logic
 };
 </script>
 
