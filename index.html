@@ -5,12 +5,12 @@
 <style>
 body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 .avatar {
-    width:40px; height:40px; border-radius:50%;
-    border:1px solid #888;
+    width:40px; height:40px; border:1px solid #888;
     background-size:cover; background-position:center;
     display:flex; justify-content:center; align-items:center;
     font-weight:bold; color:white;
 }
+#peopleTable img { width:40px; height:40px; border-radius:0; border:1px solid #888; } /* square avatars with outline */
 .videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
 .videoMeta { color:grey; font-size:12px; margin-bottom:5px; }
 #videoPlayerWrapper { display:flex; gap:20px; }
@@ -24,17 +24,16 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 #signupSection, #loginSection { width:300px; margin:20px auto; background:#DDD; padding:10px; }
 #signupSection { margin-top:30px; }
 .input-group { margin-bottom:10px; display:flex; flex-direction:column; }
-button { margin-top:5px; }
-#saveBioBtn { width:auto; padding:5px 10px; font-size:12px; }
+.tabBtn { padding:5px 10px; font-size:14px; margin-right:5px; cursor:pointer; }
+#saveBioBtn { padding:5px 10px; font-size:12px; cursor:pointer; }
 #bioInput { width:200px; height:50px; }
 #peopleTable { width:100%; border-collapse:collapse; margin-top:10px; }
 #peopleTable th, #peopleTable td { border:1px solid #ccc; padding:5px; text-align:left; }
-#peopleTable img { width:40px; height:40px; border-radius:50%; }
+a { cursor:pointer; color:blue; text-decoration:underline; }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div id="userProfile" style="position:absolute; top:10px; right:15px;">
 <span id="usernameDisplay"></span>
 </div>
@@ -72,12 +71,11 @@ button { margin-top:5px; }
 
 <div id="status"></div>
 
-<!-- FEED -->
 <div id="feedSection" style="display:none; padding:20px;">
 <h3>Welcome, <span id="userEmail"></span></h3>
 
-<button id="videosTab">Videos</button>
-<button id="peopleTab">People</button>
+<button class="tabBtn" id="videosTab">Videos</button>
+<button class="tabBtn" id="peopleTab">People</button>
 
 <div id="videosSection">
 <h3>Videos</h3>
@@ -95,9 +93,8 @@ button { margin-top:5px; }
 </div>
 </div>
 
-<!-- PROFILE -->
 <div id="profileSection">
-<h3>My Profile</h3>
+<h3>Profile</h3>
 <p id="profileInfo"></p>
 <div class="input-group">
 <label>Bio:</label>
@@ -107,7 +104,6 @@ button { margin-top:5px; }
 <div id="channelVideos"></div>
 </div>
 
-<!-- VIDEO PLAYER -->
 <div id="videoPlayerSection" style="display:none; padding:20px;">
 <div id="videoPlayerWrapper">
 <div id="videoPlayerMain">
@@ -139,12 +135,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser = null;
-let currentVideoId = null;
-
-const HOME_LIMIT = 25;
-const SIDE_LIMIT = 6;
-const defaultAvatar = "https://i.redd.it/high-resolution-remakes-of-the-old-default-youtube-avatar-v0-bgwxf7bec4ob1.png";
+let currentUser=null;
+let currentVideoId=null;
+const HOME_LIMIT=25, SIDE_LIMIT=6;
+const defaultAvatar="https://i.redd.it/high-resolution-remakes-of-the-old-default-youtube-avatar-v0-bgwxf7bec4ob1.png";
 
 // AUTH
 signupBtn.onclick = async ()=>{
@@ -168,13 +162,13 @@ onAuthStateChanged(auth, async user=>{
     return;
   }
 
-  currentUser = user;
+  currentUser=user;
   loginSection.style.display="none";
   signupSection.style.display="none";
   feedSection.style.display="block";
-  profileSection.style.display="block"; 
+  profileSection.style.display="block";
   headerLinks.style.display="inline";
-  userEmail.innerText = user.email;
+  userEmail.innerText=user.email;
 
   loadVideos();
   loadUserList();
@@ -183,35 +177,33 @@ onAuthStateChanged(auth, async user=>{
 
 // LOAD VIDEOS
 async function loadVideos(){
-  const q = query(collection(db,"videos"), orderBy("createdAt","desc"));
-  const snap = await getDocs(q);
-  let html="";
-  let count=0;
+  const q=query(collection(db,"videos"),orderBy("createdAt","desc"));
+  const snap=await getDocs(q);
+  let html="",count=0;
   snap.forEach(docSnap=>{
-    if(count>=HOME_LIMIT) return;
-    let v = docSnap.data();
-    // Convert Google Drive links from -view to -preview
-    if(v.url.includes("drive.google.com")) v.url = v.url.replace("-view","-preview");
-    html += `<div onclick="playVideo('${docSnap.id}')">
+    if(count>=HOME_LIMIT)return;
+    let v=docSnap.data();
+    if(v.url.includes("drive.google.com")) v.url=v.url.replace("-view","-preview");
+    html+=`<div onclick="playVideo('${docSnap.id}')">
       <iframe src="${v.url}" width="160" height="90"></iframe>
       <div class="videoTitle">${v.title}</div>
       <div class="videoMeta">${v.views||0} views</div>
     </div>`;
     count++;
   });
-  homeThumbnails.innerHTML = html;
+  homeThumbnails.innerHTML=html;
 }
 
 // PLAY VIDEO
-window.playVideo = async (id)=>{
-  currentVideoId = id;
+window.playVideo=async(id)=>{
+  currentVideoId=id;
   videoPlayerSection.style.display="block";
   feedSection.style.display="none";
 
-  const ref = doc(db,"videos",id);
-  const snap = await getDoc(ref);
-  let v = snap.data();
-  if(v.url.includes("drive.google.com")) v.url = v.url.replace("-view","-preview");
+  const ref=doc(db,"videos",id);
+  const snap=await getDoc(ref);
+  let v=snap.data();
+  if(v.url.includes("drive.google.com")) v.url=v.url.replace("-view","-preview");
 
   await updateDoc(ref,{views:(v.views||0)+1});
   playerTitle.innerText=v.title;
@@ -219,11 +211,11 @@ window.playVideo = async (id)=>{
 
   loadComments();
 
-  const all = await getDocs(collection(db,"videos"));
-  let html="", count=0;
+  const all=await getDocs(collection(db,"videos"));
+  let html="",count=0;
   all.forEach(d=>{
-    if(d.id===id) return;
-    if(count>=SIDE_LIMIT) return;
+    if(d.id===id)return;
+    if(count>=SIDE_LIMIT)return;
     let vid=d.data();
     html+=`<div onclick="playVideo('${d.id}')">${vid.title}</div>`;
     count++;
@@ -233,7 +225,7 @@ window.playVideo = async (id)=>{
 
 // LOAD COMMENTS
 async function loadComments(){
-  const snap = await getDocs(collection(db,"comments"));
+  const snap=await getDocs(collection(db,"comments"));
   let html="";
   snap.forEach(d=>{
     let c=d.data();
@@ -255,34 +247,33 @@ commentBtn.onclick=async ()=>{
   loadComments();
 };
 
-// NAV
-homeBtn.onclick = ()=>{
+// NAVIGATION
+homeBtn.onclick=()=>{
   videoPlayerSection.style.display="none";
   feedSection.style.display="block";
   loadVideos();
 };
-videosTab.onclick = ()=>{
+videosTab.onclick=()=>{
   videosSection.style.display="block";
   peopleSection.style.display="none";
 };
-peopleTab.onclick = ()=>{
+peopleTab.onclick=()=>{
   videosSection.style.display="none";
   peopleSection.style.display="block";
 };
 
 // PEOPLE TAB
 async function loadUserList(){
-  const usersSnap = await getDocs(collection(db,"users"));
+  const usersSnap=await getDocs(collection(db,"users"));
   let html="";
   usersSnap.forEach(doc=>{
     const u=doc.data();
     const avatar=u.avatar||defaultAvatar;
-    const join=u.birthdate||"N/A";
     html+=`<tr>
       <td><img src="${avatar}"></td>
-      <td><a href="#" onclick="openChannel('${doc.id}')">${u.username||u.email}</a></td>
-      <td><a href="#" onclick="openChannel('${doc.id}')">Channel</a></td>
-      <td>${join}</td>
+      <td><a onclick="openChannel('${doc.id}')">${u.username||u.email}</a></td>
+      <td><a onclick="openChannel('${doc.id}')">Channel</a></td>
+      <td>${new Date(u.joinTime||0).toLocaleDateString()}</td>
     </tr>`;
   });
   userList.innerHTML=html;
@@ -293,16 +284,16 @@ async function openChannel(uid){
   feedSection.style.display="none";
   videoPlayerSection.style.display="none";
   profileSection.style.display="block";
+  myProfileBtn.style.display="none"; // hide My Profile button
 
-  const docRef = doc(db,"users",uid);
-  const docSnap = await getDoc(docRef);
+  const docRef=doc(db,"users",uid);
+  const docSnap=await getDoc(docRef);
   if(!docSnap.exists()) return;
-  const data = docSnap.data();
+  const data=docSnap.data();
   profileInfo.innerText=`Username: ${data.username}\nEmail: ${data.email||""}\nBirthdate: ${data.birthdate||"N/A"}`;
-  bioInput.value = data.bio||"";
+  bioInput.value=data.bio||"";
 
-  // load user videos
-  const snap = await getDocs(collection(db,"videos"));
+  const snap=await getDocs(collection(db,"videos"));
   let html="";
   snap.forEach(v=>{
     const vd=v.data();
@@ -320,16 +311,17 @@ async function openChannel(uid){
 
 // PROFILE
 function loadProfile(){
-  const docRef = doc(db,"users",currentUser.uid);
+  const docRef=doc(db,"users",currentUser.uid);
   getDoc(docRef).then(docSnap=>{
     if(docSnap.exists()){
-      const data = docSnap.data();
+      const data=docSnap.data();
       profileInfo.innerText=`Username: ${data.username}\nEmail: ${currentUser.email}\nBirthdate: ${data.birthdate||'N/A'}`;
-      bioInput.value = data.bio||"";
+      bioInput.value=data.bio||"";
     }
   });
+  myProfileBtn.style.display="inline"; // show My Profile button on own profile
 }
-saveBioBtn.onclick = async ()=>{
+saveBioBtn.onclick=async()=>{
   await updateDoc(doc(db,"users",currentUser.uid),{bio: bioInput.value});
   alert("Bio saved!");
 }
@@ -341,7 +333,6 @@ myProfileBtn.onclick=()=>{
   profileSection.style.display="block";
   loadProfile();
 };
-
 </script>
 </body>
 </html>
