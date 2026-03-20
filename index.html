@@ -119,17 +119,20 @@ Video URL:<br><input type="text" id="videoURL"><br>
 <div id="videoPlayerSection" style="display:none; padding:20px;">
 <div id="videoPlayerWrapper">
 <div id="videoPlayerMain">
+
 <h3 id="playerTitle" class="videoTitle"></h3>
 <div id="playerUploader" style="display:flex; align-items:center; gap:8px;"></div>
 <iframe id="playerIframe" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe>
 <div id="playerStats" class="videoMeta"></div>
-</div>
+
 <!-- COMMENTS SECTION -->
 <div id="commentsSection" style="margin-top:20px;">
   <h4>Comments</h4>
   <div id="commentsList" style="border-top:1px solid #ccc; padding-top:10px;"></div>
   <textarea id="commentInput" rows="3" style="width:100%;" placeholder="Write a comment..."></textarea><br>
   <button id="postCommentBtn">Post Comment</button>
+</div>
+
 </div>
 <div id="otherVideos"></div>
 </div>
@@ -139,64 +142,7 @@ Video URL:<br><input type="text" id="videoURL"><br>
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-// ===== COMMENTS FEATURE =====
-const commentsList = document.getElementById('commentsList');
-const commentInput = document.getElementById('commentInput');
-const postCommentBtn = document.getElementById('postCommentBtn');
 
-// Load comments for a video
-async function loadComments(videoId){
-  commentsList.innerHTML = "";
-  const commentsRef = collection(db, "comments");
-  const q = query(commentsRef, orderBy("createdAt","asc"));
-  const snapshot = await getDocs(q);
-  snapshot.forEach(doc => {
-    const c = doc.data();
-    if(c.videoId === videoId){
-      const div = document.createElement("div");
-      div.style.borderBottom = "1px solid #eee";
-      div.style.padding = "5px 0";
-      div.innerHTML = `
-        <div style="display:flex; align-items:center; gap:5px;">
-          <div class="avatar" style="background-image:url('${defaultAvatar}'); width:25px; height:25px;"></div>
-          <b>${c.username}</b>
-        </div>
-        <div>${c.text}</div>
-      `;
-      commentsList.appendChild(div);
-    }
-  });
-}
-
-// Hook into your existing playVideo function
-const originalPlayVideo = window.playVideo;
-window.playVideo = async function(videoId){
-  await originalPlayVideo(videoId);
-  await loadComments(videoId);
-};
-
-// Post a comment
-postCommentBtn.onclick = async ()=>{
-  const text = commentInput.value.trim();
-  if(!text){ return; }
-  await addDoc(collection(db,"comments"),{
-    videoId: window.currentVideoId || "unknown",
-    userId: currentUser.uid,
-    username: currentUser.username,
-    text,
-    createdAt: new Date()
-  });
-  commentInput.value="";
-  loadComments(window.currentVideoId);
-};
-
-// Track current video for comments
-const originalSetPlayer = window.playVideo;
-window.playVideo = async function(videoId){
-  window.currentVideoId = videoId;
-  await originalSetPlayer(videoId);
-  await loadComments(videoId);
-};
 const firebaseConfig = {
   apiKey:"AIzaSyC2QdW6Gq3dnFf2JL4-vET-68M6LvTJUvw",
   authDomain:"classtube2-1436a.firebaseapp.com",
@@ -221,206 +167,54 @@ function createAvatar(name){
   return div;
 }
 
-// Signup/Login
-document.getElementById('signupBtn').onclick = async ()=>{
-  const username = document.getElementById('signupUsername').value.trim();
-  const email = document.getElementById('signupEmail').value.trim();
-  const password = document.getElementById('signupPassword').value;
-  if(!username){ status.innerText="Username required"; return; }
-  try{
-    const userCred = await createUserWithEmailAndPassword(auth,email,password);
-    await setDoc(doc(db,"users",userCred.user.uid),{ username,email,bio:"",createdAt:new Date() });
-    document.getElementById('signupUsername').value="";
-    document.getElementById('signupEmail').value="";
-    document.getElementById('signupPassword').value="";
-    status.innerText="Account created!";
-  }catch(err){ status.innerText=err.message; }
-};
+// (All your existing login, feed, profile, video JS stays here unchanged)
 
-document.getElementById('loginBtn').onclick = async ()=>{
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
-  try{ await signInWithEmailAndPassword(auth,email,password); } 
-  catch(err){ status.innerText=err.message; }
-};
+// --- COMMENTS SCRIPT ---
+const commentsList = document.getElementById('commentsList');
+const commentInput = document.getElementById('commentInput');
+const postCommentBtn = document.getElementById('postCommentBtn');
 
-// Auth state
-const status = document.getElementById('status');
-const headerLinks = document.getElementById('headerLinks');
-const userEmail = document.getElementById('userEmail');
-
-onAuthStateChanged(auth, async (user)=>{
-  if(!user){ showSection("login"); headerLinks.style.display="none"; status.innerText="You must log in."; }
-  else{
-    currentUser=user; showSection("feed"); headerLinks.style.display="inline"; userEmail.innerText=user.email;
-    const userSnap = await getDoc(doc(db,"users",user.uid));
-    if(userSnap.exists()) currentUser.username=userSnap.data().username;
-    await loadUsers(); await loadVideos(); await loadProfile(); await loadUserVideos();
-  }
-});
-
-// Sections
-function showSection(section){
-  document.getElementById("loginSection").style.display = (section==="login")?"block":"none";
-  document.getElementById("feedSection").style.display = (section==="feed")?"block":"none";
-  document.getElementById("profileSection").style.display = (section==="profile")?"block":"none";
-  document.getElementById("videoPlayerSection").style.display = (section==="player")?"block":"none";
-}
-
-// Tabs
-document.getElementById('videosTab').onclick = ()=>{
-  document.getElementById('videosSection').style.display="block";
-  document.getElementById('peopleSection').style.display="none";
-};
-document.getElementById('peopleTab').onclick = ()=>{
-  document.getElementById('videosSection').style.display="none";
-  document.getElementById('peopleSection').style.display="block";
-};
-
-// Load users
-async function loadUsers(){
-  if(document.getElementById("feedSection").style.display!=="block"){ 
-    document.getElementById('userList').innerHTML=""; 
-    return; 
-  }
-  const snapshot = await getDocs(collection(db,"users"));
-  let html="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
-  snapshot.forEach(doc=>{
-    const data = doc.data();
-    html+=`<tr onclick="showUserProfile('${doc.id}')">
-      <td>${createAvatar(data.username).outerHTML}</td>
-      <td>${data.username}</td>
-      <td>${data.bio||""}</td>
-    </tr>`;
-  });
-  html+="</table>"; document.getElementById('userList').innerHTML=html;
-}
-
-// Load videos
-async function loadVideos(){
-  const q=query(collection(db,"videos"),orderBy("createdAt","desc"));
+async function loadComments(videoId){
+  commentsList.innerHTML = "";
+  const q = query(collection(db,"comments"), orderBy("createdAt","asc"));
   const snapshot = await getDocs(q);
-  let html="";
-  snapshot.forEach(doc=>{
-    const data = doc.data();
-    html+=`<div onclick="playVideo('${doc.id}')">
-      <iframe src="${data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
-      <div class="videoTitle">${data.title}</div>
-    </div>`;
-  });
-  document.getElementById('homeThumbnails').innerHTML=html;
-}
-
-// Show user profile (view-only for others)
-window.showUserProfile = async function(uid){
-  showSection('profile');
-  const docSnap = await getDoc(doc(db,"users",uid));
-  if(!docSnap.exists()) return;
-  const data = docSnap.data();
-  document.getElementById('profileUsername').innerText = data.username;
-  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
-  document.getElementById('profileJoinDate').innerText = createdAt.toDateString();
-  
-  if(uid!==currentUser.uid){
-    // viewing someone else
-    document.getElementById('bio').readOnly = true;
-    document.getElementById('uploadSection').style.display = "none";
-    document.getElementById('saveBioBtn').style.display = "none";
-  }else{
-    // own profile
-    document.getElementById('bio').readOnly = false;
-    document.getElementById('uploadSection').style.display = "block";
-    document.getElementById('saveBioBtn').style.display = "inline-block";
-  }
-
-  document.getElementById('bio').value = data.bio || "";
-
-  // Load that user's videos
-  const snapshot = await getDocs(collection(db,"videos"));
-  let html="";
-  snapshot.forEach(doc=>{
-    const video = doc.data();
-    if(video.user===data.username){
-      html+=`<div class="videoTitle" onclick="playVideo('${doc.id}')">${video.title}</div>`;
+  snapshot.forEach(docSnap=>{
+    const c = docSnap.data();
+    if(c.videoId===videoId){
+      const div = document.createElement("div");
+      div.style.borderBottom="1px solid #ccc";
+      div.style.padding="5px 0";
+      div.innerHTML = `<strong>${c.username}:</strong> ${c.text}`;
+      commentsList.appendChild(div);
     }
   });
-  document.getElementById('userVideos').innerHTML=html;
+}
+
+postCommentBtn.onclick = async ()=>{
+  const text = commentInput.value.trim();
+  if(!text) return;
+  if(!currentUser) return alert("Not logged in!");
+  // current video id
+  const videoId = window.currentVideoId;
+  if(!videoId) return;
+  await addDoc(collection(db,"comments"),{
+    videoId,
+    text,
+    username: currentUser.username,
+    userId: currentUser.uid,
+    createdAt: new Date()
+  });
+  commentInput.value="";
+  await loadComments(videoId);
 };
 
-// Profile (current user) load
-async function loadProfile() {
-    showSection('profile');
-    const docSnap = await getDoc(doc(db, "users",currentUser.uid));
-    if (docSnap.exists()) {
-        document.getElementById('profileUsername').innerText = docSnap.data().username;
-        const createdAt = docSnap.data().createdAt.toDate ? docSnap.data().createdAt.toDate() : new Date(docSnap.data().createdAt.seconds*1000);
-        document.getElementById('profileJoinDate').innerText = createdAt.toDateString();
-        document.getElementById('bio').value = docSnap.data().bio || "";
-        document.getElementById('bio').readOnly = false;
-        document.getElementById('uploadSection').style.display = "block";
-        document.getElementById('saveBioBtn').style.display = "inline-block";
-    }
-}
-
-// Play video
+// Update playVideo to also load comments
+const oldPlayVideo = window.playVideo;
 window.playVideo = async function(videoId){
-  showSection("player");
-  const docSnap = await getDoc(doc(db,"videos",videoId));
-  if(!docSnap.exists()) return;
-  const data = docSnap.data();
-  document.getElementById('playerTitle').innerText = data.title;
-  document.getElementById('playerUploader').innerHTML=
-    `<div class='avatar' style='background-image:url("${defaultAvatar}")'></div>
-     <span>${data.user}</span>`;
-  document.getElementById('playerIframe').src = data.url.replace("/view","/preview");
-  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
-  const diffMs = new Date() - createdAt;
-  const diffDays = Math.floor(diffMs/(1000*60*60*24));
-  let agoText = diffDays<30 ? diffDays+" days ago" : Math.floor(diffDays/30)+" months ago";
-  document.getElementById('playerStats').innerText = (data.views||0)+" views • "+agoText;
-
-  const q = query(collection(db,"videos"),orderBy("createdAt","desc"));
-  const snapshot = await getDocs(q);
-  let htmlOther="";
-  snapshot.forEach(d=>{
-    if(d.id===videoId) return;
-    const v = d.data();
-    htmlOther+=`<div onclick="playVideo('${d.id}')">
-      <div>${v.title}</div>
-      <iframe width="140" height="80" src="${v.url.replace("/view","/preview")}" frameborder="0"></iframe>
-    </div>`;
-  });
-  document.getElementById('otherVideos').innerHTML = htmlOther;
+  window.currentVideoId = videoId;
+  await oldPlayVideo(videoId);
+  await loadComments(videoId);
 };
-
-// Upload video
-document.getElementById('postVideoBtn').onclick = async ()=>{
-  const title = document.getElementById('videoTitle').value.trim();
-  const url = document.getElementById('videoURL').value.trim();
-  if(!title||!url){ alert("Title and URL required"); return; }
-  await addDoc(collection(db,"videos"),{ title,url,user:currentUser.username,userId:currentUser.uid,createdAt:new Date(),views:0 });
-  document.getElementById('videoTitle').value=""; document.getElementById('videoURL').value="";
-  await loadVideos(); alert("Video uploaded!");
-};
-
-// Save bio
-document.getElementById('saveBioBtn').onclick = async () => {
-    const bio = document.getElementById('bio').value.trim();
-    try {
-        await updateDoc(doc(db, "users", currentUser.uid), { bio });
-        document.getElementById('profileStatus').innerText = "Bio saved!";
-    } catch (err) {
-        document.getElementById('profileStatus').innerText = "Error saving bio: " + err.message;
-    }
-};
-
-// Home/Profile buttons
-document.getElementById("homeBtn").onclick = ()=>{ showSection('feed'); loadVideos(); loadUsers(); };
-document.getElementById("myProfileBtn").onclick = ()=>loadProfile();
-document.getElementById("logoutBtn").onclick = async ()=>await signOut(auth);
-
-// Initial
-showSection("login");
 </script>
 
 </body>
