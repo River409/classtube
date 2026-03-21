@@ -8,11 +8,12 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
     width:30px; height:30px; border-radius:0;
     border:1px solid #888;
     color:white; display:flex; justify-content:center; align-items:center;
-    font-weight:bold;
+    font-weight:bold; font-family:Arial,sans-serif;
     background-size:cover;
     background-position:center;
 }
 .videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
+.videoTitle.clicked { color:black; }
 .videoMeta { color:grey; font-size:12px; margin-bottom:5px; }
 #videoPlayerWrapper { display:flex; gap:20px; }
 #videoPlayerMain { flex:2; }
@@ -22,9 +23,81 @@ body { margin:0; font-family:Arial,sans-serif; background:#fff; }
 </head>
 <body>
 
-<!-- (UNCHANGED UI ABOVE) -->
+<!-- HEADER -->
+<div id="userProfile" style="position:absolute; top:10px; right:15px; display:flex; gap:8px;">
+<img id="userAvatar" style="width:34px; height:34px; border:1px solid #888; display:none;">
+<span id="usernameDisplay"></span>
+</div>
 
-<!-- UPLOAD SECTION -->
+<table width="100%" border="1">
+<tr>
+<td>
+<b>ClassTube</b>
+<span id="headerLinks" style="float:right; display:none;">
+<a href="#" id="homeBtn">Home</a> |
+<a href="#" id="myProfileBtn">Profile</a> |
+<a href="#" id="logoutBtn">Logout</a>
+</span>
+</td>
+</tr>
+</table>
+
+<!-- LOGIN -->
+<div id="loginSection" style="width:300px; margin:50px auto; background:#DDD; padding:10px; border:1px solid #999;">
+<h2>Login / Sign Up</h2>
+
+<b>Sign Up</b><br><br>
+Username:<br><input type="text" id="signupUsername"><br><br>
+Email:<br><input type="email" id="signupEmail"><br><br>
+Birthdate:<br><input type="date" id="signupBirthdate"><br><br>
+Password:<br><input type="password" id="signupPassword"><br><br>
+<input type="button" value="Create Account" id="signupBtn"><br><br>
+
+<b>Login</b><br><br>
+Email:<br><input type="email" id="loginEmail"><br><br>
+Password:<br><input type="password" id="loginPassword"><br><br>
+<input type="button" value="Login" id="loginBtn"><br><br>
+
+<span id="status"></span>
+</div>
+
+<!-- FEED -->
+<div id="feedSection" style="display:none; padding:20px;">
+<h3>Welcome, <span id="userEmail"></span></h3>
+<hr>
+
+<div class="tabButtons">
+<button id="videosTab">Videos</button>
+<button id="peopleTab">People</button>
+</div>
+
+<div id="videosSection">
+<h3>All Videos:</h3>
+<div id="homeThumbnails"></div>
+</div>
+
+<div id="peopleSection" style="display:none;">
+<h3>Users:</h3>
+<div id="userList"></div>
+</div>
+</div>
+
+<!-- PROFILE -->
+<div id="profileSection" style="display:none; padding:20px;">
+Username: <b id="profileUsername"></b><br>
+Join date: <span id="profileJoinDate"></span><br><br>
+
+<div id="bioContainer">
+Bio:<br>
+<textarea id="bio" rows="5" cols="40"></textarea><br>
+</div>
+
+<input type="button" value="Save Bio" id="saveBioBtn"><br>
+<div id="profileStatus"></div><br><br>
+
+<h3>Videos</h3>
+<div id="userVideos"></div>
+
 <div id="uploadSection">
 Title:<br><input type="text" id="videoTitle"><br>
 Video URL:<br><input type="text" id="videoURL"><br>
@@ -35,70 +108,118 @@ Description:<br>
 
 <input type="button" value="Post Video" id="postVideoBtn"><br>
 </div>
+</div>
 
 <!-- VIDEO PLAYER -->
+<div id="videoPlayerSection" style="display:none; padding:20px;">
+<div id="videoPlayerWrapper">
 <div id="videoPlayerMain">
-<h3 id="playerTitle"></h3>
+<h3 id="playerTitle" class="videoTitle"></h3>
+<div id="playerUploader"></div>
 <iframe id="playerIframe" width="560" height="315"></iframe>
-<div id="playerStats"></div>
+<div id="playerStats" class="videoMeta"></div>
 
 <!-- ✅ ADDED DESCRIPTION DISPLAY -->
 <div id="playerDescription" style="margin-top:10px;"></div>
+
+</div>
+<div id="otherVideos"></div>
+</div>
 </div>
 
 <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-// (ALL YOUR ORIGINAL IMPORTS + FIREBASE CONFIG STAY EXACTLY THE SAME)
-
-// =======================
-// ✅ ONLY SAFE ADDITIONS BELOW
-// =======================
-
-// Upload video (ONLY ADDED description)
-document.getElementById('postVideoBtn').onclick = async ()=>{
-  const title = document.getElementById('videoTitle').value.trim();
-  const url = document.getElementById('videoURL').value.trim();
-
-  // ✅ ADDED
-  const description = document.getElementById('videoDescription').value.trim();
-
-  if(!title||!url){ alert("Title and URL required"); return; }
-
-  await addDoc(collection(db,"videos"),{
-    title,
-    url,
-    description, // ✅ ADDED
-    user:currentUser.username,
-    userId:currentUser.uid,
-    createdAt:new Date(),
-    views:0
-  });
-
-  document.getElementById('videoTitle').value="";
-  document.getElementById('videoURL').value="";
-  document.getElementById('videoDescription').value=""; // ✅ ADDED
-
-  await loadVideos();
+const firebaseConfig = {
+  apiKey:"AIzaSyC2QdW6Gq3dnFf2JL4-vET-68M6LvTJUvw",
+  authDomain:"classtube2-1436a.firebaseapp.com",
+  projectId:"classtube2-1436a"
 };
 
-// Play video (ONLY ADDED description display)
-window.playVideo = async function(videoId){
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+
+const status = document.getElementById('status');
+const headerLinks = document.getElementById('headerLinks');
+const userEmail = document.getElementById('userEmail');
+
+onAuthStateChanged(auth, async (user)=>{
+  if(!user){ showSection("login"); }
+  else{
+    currentUser=user;
+    showSection("feed");
+    headerLinks.style.display="inline";
+    userEmail.innerText=user.email;
+    await loadVideos();
+    await loadUsers();
+  }
+});
+
+function showSection(section){
+  loginSection.style.display = section==="login"?"block":"none";
+  feedSection.style.display = section==="feed"?"block":"none";
+  profileSection.style.display = section==="profile"?"block":"none";
+  videoPlayerSection.style.display = section==="player"?"block":"none";
+}
+
+async function loadVideos(){
+  const q=query(collection(db,"videos"),orderBy("createdAt","desc"));
+  const snapshot = await getDocs(q);
+  let html="";
+  snapshot.forEach(doc=>{
+    const data = doc.data();
+    html+=`<div onclick="playVideo('${doc.id}')">
+      <iframe src="${data.url.replace("/view","/preview")}"></iframe>
+      <div>${data.title}</div>
+    </div>`;
+  });
+  homeThumbnails.innerHTML=html;
+}
+
+async function loadUsers(){
+  const snapshot = await getDocs(collection(db,"users"));
+  let html="";
+  snapshot.forEach(doc=>{
+    html+=`<div>${doc.data().username}</div>`;
+  });
+  userList.innerHTML=html;
+}
+
+window.playVideo = async function(id){
   showSection("player");
-
-  const docSnap = await getDoc(doc(db,"videos",videoId));
-  if(!docSnap.exists()) return;
-
+  const docSnap = await getDoc(doc(db,"videos",id));
   const data = docSnap.data();
 
-  document.getElementById('playerTitle').innerText = data.title;
-  document.getElementById('playerIframe').src = data.url.replace("/view","/preview");
+  playerTitle.innerText=data.title;
+  playerIframe.src=data.url.replace("/view","/preview");
 
-  // ✅ ADDED
-  document.getElementById('playerDescription').innerText =
-    data.description || "No description.";
-
+  playerDescription.innerText = data.description || "No description.";
 };
 
+document.getElementById('postVideoBtn').onclick = async ()=>{
+  const title = videoTitle.value.trim();
+  const url = videoURL.value.trim();
+  const description = videoDescription.value.trim();
+
+  await addDoc(collection(db,"videos"),{
+    title,url,description,user:currentUser.email,createdAt:new Date()
+  });
+
+  videoTitle.value="";
+  videoURL.value="";
+  videoDescription.value="";
+
+  loadVideos();
+};
+
+homeBtn.onclick=()=>{ showSection("feed"); loadVideos(); loadUsers(); };
+logoutBtn.onclick=()=>signOut(auth);
+
+showSection("login");
 </script>
 
 </body>
