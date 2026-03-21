@@ -296,7 +296,21 @@ async function loadProfile() {
         document.getElementById('saveBioBtn').style.display = "inline-block";
     }
 }
+async function loadUserVideos(){
+  if(!currentUser) return;
 
+  const snapshot = await getDocs(collection(db,"videos"));
+  let html="";
+
+  snapshot.forEach(doc=>{
+    const video = doc.data();
+    if(video.userId === currentUser.uid){
+      html+=`<div class="videoTitle" onclick="playVideo('${doc.id}')">${video.title}</div>`;
+    }
+  });
+
+  document.getElementById('userVideos').innerHTML = html;
+}
 // Play video
 window.playVideo = async function(videoId){
   showSection("player");
