@@ -123,7 +123,7 @@ Description:<br>
 <div id="playerUploader" style="display:flex; align-items:center; gap:8px;"></div>
 <iframe id="playerIframe" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe>
 <div id="playerStats" class="videoMeta"></div>
-<div id="playerDescription" style="margin-top:10px;"></div>
+<div id="playerDescription" class="videoMeta"></div>
 </div>
 <div id="otherVideos"></div>
 </div>
@@ -309,7 +309,7 @@ document.getElementById('postVideoBtn').onclick = async ()=>{
   // clear fields
   document.getElementById('videoTitle').value="";
   document.getElementById('videoURL').value="";
-  document.getElementById('videoDescription').value=""; // clear description
+  document.getElementById('playerDescription').innerText = data.description || "";
   await loadVideos(); 
   alert("Video uploaded!");
 };
