@@ -237,13 +237,13 @@ async function loadUsers(){
   html+="</table>"; document.getElementById('userList').innerHTML=html;
 }
 
-// LOAD VIDEOS (25 RANDOM FOR HOME)
+// LOAD VIDEOS (24 RANDOM FOR HOME)
 async function loadVideos(){
   const snapshot = await getDocs(collection(db,"videos"));
   const allVideos = [];
   snapshot.forEach(doc=>allVideos.push({id:doc.id,data:doc.data()}));
   const selected=[];
-  while(selected.length<25 && allVideos.length>0){
+  while(selected.length<24 && allVideos.length>0){
     const idx=Math.floor(Math.random()*allVideos.length);
     selected.push(allVideos[idx]);
     allVideos.splice(idx,1);
