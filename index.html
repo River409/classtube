@@ -231,12 +231,11 @@ async function loadUsers(){
   html+="</table>"; document.getElementById('userList').innerHTML=html;
 }
 
-// Load videos (25 random)
+// Load videos (25 random) – thumbnails only, no uploader names
 async function loadVideos(){
   const snapshot = await getDocs(collection(db,"videos"));
   const allVideos = [];
   snapshot.forEach(doc=>{ allVideos.push({id:doc.id, data:doc.data()}); });
-  // Shuffle
   for(let i=allVideos.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [allVideos[i],allVideos[j]]=[allVideos[j],allVideos[i]]; }
   const selected = allVideos.slice(0,25);
   let html="";
@@ -244,13 +243,12 @@ async function loadVideos(){
     html+=`<div onclick="playVideo('${v.id}')">
       <iframe src="${v.data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
       <div class="videoTitle">${v.data.title}</div>
-      <div class="channelHeader" onclick="event.stopPropagation(); showUserProfileByName('${v.data.user}')">${v.data.user}</div>
     </div>`;
   });
   document.getElementById('homeThumbnails').innerHTML=html;
 }
 
-// Show user profile by username (used for clickable channel names)
+// Show user profile by username (for video player)
 window.showUserProfileByName = async function(username){
   const snapshot = await getDocs(collection(db,"users"));
   snapshot.forEach(doc=>{
@@ -345,8 +343,6 @@ document.getElementById('saveBioBtn').onclick = async () => {
 const searchInput = document.getElementById('searchInput');
 searchInput.addEventListener('input', async () => {
     const queryText = searchInput.value.toLowerCase();
-
-    // Filter videos
     const videosSnapshot = await getDocs(collection(db,"videos"));
     let videoHTML = "";
     videosSnapshot.forEach(doc => {
@@ -355,13 +351,11 @@ searchInput.addEventListener('input', async () => {
             videoHTML += `<div onclick="playVideo('${doc.id}')">
                 <iframe src="${data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
                 <div class="videoTitle">${data.title}</div>
-                <div class="channelHeader" onclick="event.stopPropagation(); showUserProfileByName('${data.user}')">${data.user}</div>
             </div>`;
         }
     });
     document.getElementById('homeThumbnails').innerHTML = videoHTML;
 
-    // Filter users
     const usersSnapshot = await getDocs(collection(db,"users"));
     let userHTML = "<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
     usersSnapshot.forEach(doc => {
