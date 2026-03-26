@@ -137,7 +137,26 @@ input, textarea {
     border-radius: 4px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
+#headerLinks {
+    margin-top: 10px;
+}
 
+#headerLinks a {
+    display: inline-block;
+    padding: 6px 14px;
+    margin: 0 5px;
+    background: linear-gradient(#6dbf4b, #4e9e32);
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+    border: 1px solid #3e7f28;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+#headerLinks a:hover {
+    background: linear-gradient(#7ed957, #5fbf3f);
+}
 /* Sidebar */
 #otherVideos {
     display: flex;
@@ -246,7 +265,7 @@ table { border:2px solid #000; background:#eee; }
 <tr>
 <td>
 <img id="logoImg" src="logo.png" style="height:65px;">
-<span id="headerLinks" style="float:right; display:none;">
+<div id="headerLinks" style="text-align:center; display:none;">
 <a href="#" id="homeBtn">Home</a> |
 <a href="#" id="myProfileBtn">Profile</a> |
 <a href="#" id="logoutBtn">Logout</a>
