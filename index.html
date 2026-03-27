@@ -429,19 +429,41 @@ onAuthStateChanged(auth, async user => {
 });
 
 // SIGNUP/LOGIN/LOGOUT
-document.getElementById('signupBtn').onclick=async ()=>{
-  const username=document.getElementById('signupUsername').value.trim();
-  const email=document.getElementById('signupEmail').value.trim();
-  const password=document.getElementById('signupPassword').value;
-  if(!username){ status.innerText="Username required"; return; }
+document.getElementById('signupBtn').onclick = async ()=>{
+  const username = document.getElementById('signupUsername').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+
+  // ✅ CHANGE THIS DOMAIN
+  const allowedDomain = "@school.edu";
+
+  if(!username){
+    status.innerText="Username required";
+    return;
+  }
+
+  // ✅ EMAIL CHECK
+  if(!email.endsWith(montessori-academico.es)){
+    status.innerText = "You must use a school email (" + @montessori-academico.es + ")";
+    return;
+  }
+
   try{
-    const userCred=await createUserWithEmailAndPassword(auth,email,password);
-    await setDoc(doc(db,"users",userCred.user.uid),{username,email,bio:"",createdAt:new Date()});
+    const userCred = await createUserWithEmailAndPassword(auth,email,password);
+    await setDoc(doc(db,"users",userCred.user.uid),{
+      username,
+      email,
+      bio:"",
+      createdAt:new Date()
+    });
+
     document.getElementById('signupUsername').value="";
     document.getElementById('signupEmail').value="";
     document.getElementById('signupPassword').value="";
     status.innerText="Account created!";
-  }catch(err){ status.innerText=err.message; }
+  }catch(err){
+    status.innerText=err.message;
+  }
 };
 document.getElementById('loginBtn').onclick=async ()=>{
   const email=document.getElementById('loginEmail').value.trim();
