@@ -513,11 +513,14 @@ data.views = newViews;
     const idx=Math.floor(Math.random()*allVid.length);
     sel.push(allVid[idx]);
     allVid.splice(idx,1);
-  }
-  let htmlOther="";
-  sel.forEach(v=>{
-    htmlOther+=`<div onclick="playVideo('${v.id}')"><div>${v.data.title}</div><img src="${v.data.thumbnail || 'https://via.placeholder.com/140x80'}" width="140" height="80">" src="${v.data.url.replace("/view","/preview")}" frameborder="0"></iframe></div>`;
-  });
+sel.forEach(v=>{
+  htmlOther += `
+    <div onclick="playVideo('${v.id}')">
+      <img src="${v.data.thumbnail || 'https://via.placeholder.com/140x80'}" width="140" height="80">
+      <div class="videoTitle">${v.data.title}</div>
+    </div>
+  `;
+});
   document.getElementById('otherVideos').innerHTML=htmlOther;
 };
 
