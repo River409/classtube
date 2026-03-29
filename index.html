@@ -338,10 +338,10 @@ Join date: <span id="profileJoinDate"></span><br><br>
 Title:<br><input type="text" id="videoTitle"><br>
 Description:<br><textarea id="videoDescription" rows="3" cols="40"></textarea><br>
 Video URL:<br><input type="text" id="videoURL"><br>
-Thumbnail URL:<br><input type="text" id="videoThumbnail"><br>
 <input type="button" value="Post Video" id="postVideoBtn"><br>
 </div>
 </div>
+
 <!-- VIDEO PLAYER -->
 <div id="videoPlayerSection" style="display:none; padding:20px;">
 <div id="videoPlayerWrapper">
@@ -513,14 +513,11 @@ data.views = newViews;
     const idx=Math.floor(Math.random()*allVid.length);
     sel.push(allVid[idx]);
     allVid.splice(idx,1);
-sel.forEach(v=>{
-  htmlOther += `
-    <div onclick="playVideo('${v.id}')">
-      <img src="${v.data.thumbnail || 'https://via.placeholder.com/140x80'}" width="140" height="80">
-      <div class="videoTitle">${v.data.title}</div>
-    </div>
-  `;
-});
+  }
+  let htmlOther="";
+  sel.forEach(v=>{
+    htmlOther+=`<div onclick="playVideo('${v.id}')"><div>${v.data.title}</div><iframe width="140" height="80" src="${v.data.url.replace("/view","/preview")}" frameborder="0"></iframe></div>`;
+  });
   document.getElementById('otherVideos').innerHTML=htmlOther;
 };
 
@@ -531,7 +528,6 @@ document.getElementById('postVideoBtn').onclick=async ()=>{
   const description=document.getElementById('videoDescription').value.trim();
   if(!title||!url){ alert("Title and URL required"); return; }
   await addDoc(collection(db,"videos"),{ title,url,description,user:currentUser.displayName||currentUser.email,userId:currentUser.uid,createdAt:new Date(),views:0 });
-  thumbnail: document.getElementById('videoThumbnail').value,
   document.getElementById('videoTitle').value="";
   document.getElementById('videoURL').value="";
   document.getElementById('videoDescription').value="";
@@ -604,7 +600,7 @@ document.getElementById('searchInput').addEventListener('input',async ()=>{
   let html="";
   videosSnap.forEach(doc=>{
     const data=doc.data();
-    if(data.title.toLowerCase().includes(queryText)) html+=`<div onclick="playVideo('${doc.id}')"><img src="${data.thumbnail || 'https://via.placeholder.com/160x90'}" width="160" height="90">" frameborder="0" width="160" height="90"></iframe><div class="videoTitle">${data.title}</div></div>`;
+    if(data.title.toLowerCase().includes(queryText)) html+=`<div onclick="playVideo('${doc.id}')"><iframe src="${data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe><div class="videoTitle">${data.title}</div></div>`;
   });
   document.getElementById('homeThumbnails').innerHTML=html;
 
