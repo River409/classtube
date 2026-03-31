@@ -304,7 +304,8 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 
 <div class="tabButtons">
   <button id="videosTab">Videos</button>
-  <button id="peopleTab">People</button>
+  <button id="peopleTab">People</button
+  <button id="messagesTab">Messages</button>
 </div>
 
 <div id="videosSection">
@@ -317,7 +318,17 @@ Password:<br><input type="password" id="loginPassword"><br><br>
   <div id="userList"></div>
 </div>
 </div>
+<div id="messagesSection" style="display:none;">
+  <h3>Inbox</h3>
+  <div id="messageList" style="border:1px solid #ccc; max-height:300px; overflow-y:auto; padding:5px; background:#f9f9f9;"></div>
 
+  <div id="messageView" style="display:none; border:1px solid #888; padding:10px; margin-top:10px; background:#fff;">
+    <div id="msgHeader" style="font-weight:bold; margin-bottom:5px;"></div>
+    <div id="msgText" style="white-space:pre-wrap; margin-top:5px;"></div>
+    <input type="text" id="replyInput" placeholder="Reply..." style="width:100%; margin-top:10px;">
+    <button id="replyBtn" style="margin-top:5px;">Send Reply</button>
+  </div>
+</div>
 <!-- PROFILE -->
 <div id="profileSection" style="display:none; padding:20px;">
 Username: <b id="profileUsername"></b><br>
@@ -435,8 +446,74 @@ document.getElementById('loginBtn').onclick=async ()=>{
   const password=document.getElementById('loginPassword').value;
   try{ await signInWithEmailAndPassword(auth,email,password); } catch(err){ status.innerText=err.message; }
 };
-document.getElementById("logoutBtn").onclick=async ()=>{ await signOut(auth); showSection("login"); };
+// Messages Tab
+document.getElementById('messagesTab').onclick = async () => {
+  document.getElementById('videosSection').style.display = 'none';
+  document.getElementById('peopleSection').style.display = 'none';
+  document.getElementById('messagesSection').style.display = 'block';
+  await loadMessagesInbox();
+};
 
+const messagesRef = collection(db, "messages");
+
+async function loadMessagesInbox() {
+  if (!currentUser) return;
+
+  const qSent = query(messagesRef, where("from", "==", currentUser.uid), orderBy("createdAt", "desc"));
+  const qReceived = query(messagesRef, where("to", "==", currentUser.uid), orderBy("createdAt", "desc"));
+
+  const sentSnap = await getDocs(qSent);
+  const receivedSnap = await getDocs(qReceived);
+
+  const messages = [];
+
+  sentSnap.forEach(doc => { messages.push({ id: doc.id, ...doc.data(), type: 'sent' }); });
+  receivedSnap.forEach(doc => { messages.push({ id: doc.id, ...doc.data(), type: 'received' }); });
+
+  messages.sort((a,b) => b.createdAt.toDate ? b.createdAt.toDate() - a.createdAt.toDate() : b.createdAt.seconds - a.createdAt.seconds);
+
+  let html = '<table border="1" cellpadding="5" width="100%"><tr style="background:#ddd;"><th>Type</th><th>From/To</th><th>Snippet</th></tr>';
+  messages.forEach(msg => {
+    html += `<tr style="cursor:pointer;" onclick="viewMessage('${msg.id}')">
+               <td>${msg.type}</td>
+               <td>${msg.type === 'sent' ? msg.to : msg.from}</td>
+               <td>${msg.text.length > 50 ? msg.text.substr(0,50)+'...' : msg.text}</td>
+             </tr>`;
+  });
+  html += '</table>';
+  document.getElementById('messageList').innerHTML = html;
+  document.getElementById('messageView').style.display = 'none';
+}
+
+window.viewMessage = async function(msgId) {
+  const docSnap = await getDoc(doc(db, "messages", msgId));
+  if (!docSnap.exists()) return;
+  const data = docSnap.data();
+
+  let headerText = "";
+  if (data.type === 'received' || data.to === currentUser.uid) {
+    const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
+    headerText = `Classtube - ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${date.toLocaleDateString()}`;
+  }
+  document.getElementById('msgHeader').innerText = headerText;
+  document.getElementById('msgText').innerText = data.text;
+
+  document.getElementById('messageView').style.display = 'block';
+
+  document.getElementById('replyBtn').onclick = async () => {
+    const replyText = document.getElementById('replyInput').value.trim();
+    if (!replyText) return alert("Type a message!");
+    await addDoc(messagesRef, {
+      from: currentUser.uid,
+      to: data.from === currentUser.uid ? data.to : data.from,
+      text: replyText,
+      createdAt: new Date()
+    });
+    document.getElementById('replyInput').value = '';
+    await loadMessagesInbox();
+  };
+};
+document.getElementById("logoutBtn").onclick=async ()=>{ await signOut(auth); showSection("login"); };
 // PROFILE BUTTON
 document.getElementById("myProfileBtn").onclick=()=>loadProfile(true);
 document.getElementById("homeBtn").onclick=()=>{ showSection('feed'); loadVideos(); loadUsers(); };
