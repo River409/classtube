@@ -484,43 +484,30 @@ async function loadUsers(){
 
 // LOAD VIDEOS (24 RANDOM)
 async function loadVideos() {
-  try {
-    const snapshot = await getDocs(collection(db, "videos"));
-    const allVideos = [];
-    snapshot.forEach(doc => allVideos.push({ id: doc.id, data: doc.data() }));
+  const snapshot = await getDocs(collection(db, "videos"));
+  const allVideos = [];
+  snapshot.forEach(doc => allVideos.push({ id: doc.id, data: doc.data() }));
 
-    const selected = [];
-    while (selected.length < 24 && allVideos.length > 0) {
-      const idx = Math.floor(Math.random() * allVideos.length);
-      selected.push(allVideos[idx]);
-      allVideos.splice(idx, 1);
-    }
-
-    let html = "";
-    selected.forEach(v => {
-      const title = v.data.title || "No Title";
-
-      // Extract Google Drive file ID from URL
-      let fileId = "";
-      const match = v.data.url.match(/[-\w]{25,}/); // matches Google Drive file ID
-      if (match) fileId = match[0];
-
-      // Google Drive thumbnail URL
-      const thumbnailUrl = fileId
-        ? `https://drive.google.com/uc?export=thumbnail&id=${fileId}&sz=w160-h90`
-        : "https://via.placeholder.com/160x90.png?text=No+Thumbnail";
-
-      html += `<div onclick="playVideo('${v.id}')">
-        <img src="${thumbnailUrl}" width="160" height="90" alt="Video thumbnail">
-        <div class="videoTitle">${title}</div>
-      </div>`;
-    });
-
-    document.getElementById('homeThumbnails').innerHTML = html;
-
-  } catch (err) {
-    console.error("Error loading videos:", err);
+  const selected = [];
+  while (selected.length < 24 && allVideos.length > 0) {
+    const idx = Math.floor(Math.random() * allVideos.length);
+    selected.push(allVideos[idx]);
+    allVideos.splice(idx, 1);
   }
+
+  let html = "";
+  const placeholder = "https://via.placeholder.com/160x90.png?text=Video"; // Placeholder thumbnail
+
+  selected.forEach(v => {
+    html += `
+      <div onclick="playVideo('${v.id}')">
+        <img src="${placeholder}" width="160" height="90" alt="Video thumbnail">
+        <div class="videoTitle">${v.data.title}</div>
+      </div>
+    `;
+  });
+
+  document.getElementById('homeThumbnails').innerHTML = html;
 }
 // PLAY VIDEO
 window.playVideo = async function(videoId){
