@@ -486,34 +486,30 @@ async function loadUsers(){
 async function loadVideos(){
   const snapshot = await getDocs(collection(db,"videos"));
   const allVideos = [];
-  snapshot.forEach(doc=>allVideos.push({id:doc.id,data:doc.data()}));
-  const selected=[];
-  while(selected.length<24 && allVideos.length>0){
-    const idx=Math.floor(Math.random()*allVideos.length);
+  snapshot.forEach(doc => allVideos.push({id: doc.id, data: doc.data()}));
+
+  const selected = [];
+  while(selected.length < 24 && allVideos.length > 0){
+    const idx = Math.floor(Math.random() * allVideos.length);
     selected.push(allVideos[idx]);
-    allVideos.splice(idx,1);
+    allVideos.splice(idx, 1);
   }
-selected.forEach(v => {
-  const createdAt = v.data.createdAt?.toDate ? v.data.createdAt.toDate() : new Date(v.data.createdAt.seconds*1000);
-  const diffDays = Math.floor((new Date() - createdAt)/(1000*60*60*24));
-  const timeAgo = diffDays < 30 ? diffDays + " days ago" : Math.floor(diffDays/30) + " months ago";
 
-  html += `
-    <div onclick="playVideo('${v.id}')">
-      <!-- Keeps preview embed -->
-      <iframe src="${v.data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
+  let html = "";
+  selected.forEach(v => {
+    // Use /preview instead of /view for embedded thumbnails
+    const embedUrl = v.data.url.includes("/view") 
+                     ? v.data.url.replace("/view","/preview") 
+                     : v.data.url;
 
-      <!-- Video title -->
+    html += `<div onclick="playVideo('${v.id}')">
+      <iframe src="${embedUrl}" frameborder="0" width="160" height="90" allowfullscreen></iframe>
       <div class="videoTitle">${v.data.title}</div>
+    </div>`;
+  });
 
-      <!-- Metadata -->
-      <div class="videoMeta">${v.data.user} • ${v.data.views||0} views • ${timeAgo}</div>
-    </div>
-  `;
-});
-  document.getElementById('homeThumbnails').innerHTML=html;
+  document.getElementById('homeThumbnails').innerHTML = html;
 }
-
 // PLAY VIDEO
 window.playVideo=async function(videoId){
   showSection("player");
