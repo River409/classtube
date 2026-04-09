@@ -361,11 +361,48 @@ let currentUser = null;
 let currentVideoId = null;
 
 const defaultAvatar = "https://preview.redd.it/old-youtube-default-icons-v0-h68mdg17af661.png?width=250&format=png&auto=webp&s=0e7d4140dafde9e52ca6b36204ebb11bd822f3e9";
+const avatarBaseURL = "https://cdn.jsdelivr.net/gh/River409/classtube@main/colors/";
+
+const avatarImages = [
+  "dark_grey.jpeg",
+  "Orange_intense.jpeg",
+  "blue_purple.jpeg",
+  "Green.jpeg",
+  "brown.jpeg",
+  "cyan.jpeg",
+  "dark_blue.jpeg",
+  "dark_green.jpeg",
+  "dark_pink.jpeg",
+  "gray.jpeg",
+  "green_blue.jpeg",
+  "light_brown.jpeg",
+  "magenta.jpeg",
+  "orange.jpeg",
+  "pink.jpeg",
+  "purple.jpeg",
+  "purple2.jpeg",
+  "purple3.jpeg",
+  "red.jpeg",
+  "teal.jpeg",
+];
+
+function getAvatarFromUsername(username){
+  let hash = 0;
+  for(let i = 0; i < username.length; i++){
+    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % avatarImages.length;
+  return avatarBaseURL + avatarImages[index];
+}
 function createAvatar(name){
   const div = document.createElement("div");
   div.className="avatar";
-  div.style.backgroundImage=`url('${defaultAvatar}')`;
-  div.title=name;
+
+  const avatarUrl = getAvatarFromUsername(name);
+
+  div.style.backgroundImage = `url('${avatarUrl}')`;
+  div.title = name;
+
   return div;
 }
 
@@ -478,7 +515,12 @@ const newViews = (data.views || 0) + 1;
 await updateDoc(doc(db,"videos",videoId), { views: newViews });
 data.views = newViews;
   document.getElementById('playerTitle').innerText=data.title;
-  document.getElementById('playerUploader').innerHTML=`<div class='avatar' style='background-image:url("${defaultAvatar}")'></div><span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>`;
+  const avatarUrl = getAvatarFromUsername(data.user);
+
+document.getElementById('playerUploader').innerHTML=`
+  <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
+  <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>
+`;
   document.getElementById('playerIframe').src=data.url.replace("/view","/preview");
   document.getElementById('playerDescription').innerText=data.description||"";
   const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
