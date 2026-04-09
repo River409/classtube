@@ -493,13 +493,24 @@ async function loadVideos(){
     selected.push(allVideos[idx]);
     allVideos.splice(idx,1);
   }
-  let html="";
-  selected.forEach(v=>{
-    html+=`<div onclick="playVideo('${v.id}')">
+selected.forEach(v => {
+  const createdAt = v.data.createdAt?.toDate ? v.data.createdAt.toDate() : new Date(v.data.createdAt.seconds*1000);
+  const diffDays = Math.floor((new Date() - createdAt)/(1000*60*60*24));
+  const timeAgo = diffDays < 30 ? diffDays + " days ago" : Math.floor(diffDays/30) + " months ago";
+
+  html += `
+    <div onclick="playVideo('${v.id}')">
+      <!-- Keeps preview embed -->
       <iframe src="${v.data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe>
+
+      <!-- Video title -->
       <div class="videoTitle">${v.data.title}</div>
-    </div>`;
-  });
+
+      <!-- Metadata -->
+      <div class="videoMeta">${v.data.user} • ${v.data.views||0} views • ${timeAgo}</div>
+    </div>
+  `;
+});
   document.getElementById('homeThumbnails').innerHTML=html;
 }
 
