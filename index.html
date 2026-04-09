@@ -488,28 +488,88 @@ async function loadVideos(){
   const allVideos = [];
   snapshot.forEach(doc => allVideos.push({id: doc.id, data: doc.data()}));
 
+  // Pick 24 random videos
   const selected = [];
   while(selected.length < 24 && allVideos.length > 0){
     const idx = Math.floor(Math.random() * allVideos.length);
     selected.push(allVideos[idx]);
-    allVideos.splice(idx, 1);
+    allVideos.splice(idx,1);
   }
 
+  // Home thumbnails
   let html = "";
   selected.forEach(v => {
-    // Use /preview instead of /view for embedded thumbnails
-    const embedUrl = v.data.url.includes("/view") 
-                     ? v.data.url.replace("/view","/preview") 
-                     : v.data.url;
+    // Generate thumbnail for Google Drive URLs
+    let thumbUrl = v.data.url;
+    if(thumbUrl.includes("drive.google.com")){
+      const match = thumbUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if(match) thumbUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w160-h90`;
+    }
 
-    html += `<div onclick="playVideo('${v.id}')">
-      <iframe src="${embedUrl}" frameborder="0" width="160" height="90" allowfullscreen></iframe>
-      <div class="videoTitle">${v.data.title}</div>
-    </div>`;
+    html += `
+      <div onclick="playVideo('${v.id}')">
+        <img src="${thumbUrl}" width="160" height="90" style="border:1px solid #000; border-radius:3px;">
+        <div class="videoTitle">${v.data.title}</div>
+      </div>
+    `;
   });
-
   document.getElementById('homeThumbnails').innerHTML = html;
 }
+
+// PLAY VIDEO
+window.playVideo = async function(videoId){
+  showSection("player");
+  currentVideoId = videoId;
+  const docSnap = await getDoc(doc(db,"videos",videoId));
+  if(!docSnap.exists()) return;
+  const data = docSnap.data();
+
+  // Increment views
+  const newViews = (data.views || 0) + 1;
+  await updateDoc(doc(db,"videos",videoId), { views: newViews });
+  data.views = newViews;
+
+  document.getElementById('playerTitle').innerText = data.title;
+  const avatarUrl = getAvatarFromUsername(data.user);
+  document.getElementById('playerUploader').innerHTML = `
+    <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
+    <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>
+  `;
+  document.getElementById('playerIframe').src = data.url.replace("/view","/preview");
+  document.getElementById('playerDescription').innerText = data.description || "";
+  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
+  const diffDays = Math.floor((new Date() - createdAt)/(1000*60*60*24));
+  document.getElementById('playerStats').innerText = (data.views||0) + " views • " + (diffDays < 30 ? diffDays + " days ago" : Math.floor(diffDays/30) + " months ago");
+
+  // RANDOM 6 VIDEOS SIDEBAR with thumbnails
+  const snapshot = await getDocs(collection(db,"videos"));
+  const allVid = [];
+  snapshot.forEach(d => { if(d.id !== videoId) allVid.push({id: d.id, data: d.data()}); });
+
+  const sel = [];
+  while(sel.length < 6 && allVid.length > 0){
+    const idx = Math.floor(Math.random() * allVid.length);
+    sel.push(allVid[idx]);
+    allVid.splice(idx,1);
+  }
+
+  let htmlOther = "";
+  sel.forEach(v => {
+    let thumbUrl = v.data.url;
+    if(thumbUrl.includes("drive.google.com")){
+      const match = thumbUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if(match) thumbUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w140-h80`;
+    }
+
+    htmlOther += `
+      <div onclick="playVideo('${v.id}')">
+        <div>${v.data.title}</div>
+        <img src="${thumbUrl}" width="140" height="80" style="border:1px solid #000; border-radius:3px;">
+      </div>
+    `;
+  });
+  document.getElementById('otherVideos').innerHTML = htmlOther;
+};
 // PLAY VIDEO
 window.playVideo=async function(videoId){
   showSection("player");
