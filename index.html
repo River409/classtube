@@ -482,67 +482,45 @@ async function loadUsers(){
   html+="</table>"; document.getElementById('userList').innerHTML=html;
 }
 
-// LOAD VIDEOS (24 RANDOM) - placeholder thumbnails
+// LOAD VIDEOS (24 RANDOM)
 async function loadVideos() {
-  const snapshot = await getDocs(collection(db, "videos"));
-  const allVideos = [];
-  snapshot.forEach(doc => allVideos.push({ id: doc.id, data: doc.data() }));
+  try {
+    const snapshot = await getDocs(collection(db, "videos"));
+    const allVideos = [];
+    snapshot.forEach(doc => allVideos.push({ id: doc.id, data: doc.data() }));
 
-  const selected = [];
-  while (selected.length < 24 && allVideos.length > 0) {
-    const idx = Math.floor(Math.random() * allVideos.length);
-    selected.push(allVideos[idx]);
-    allVideos.splice(idx, 1);
-  }
+    const selected = [];
+    while (selected.length < 24 && allVideos.length > 0) {
+      const idx = Math.floor(Math.random() * allVideos.length);
+      selected.push(allVideos[idx]);
+      allVideos.splice(idx, 1);
+    }
 
-  let html = "";
-  selected.forEach(v => {
-    // Placeholder image with 160x90 size and video title as text
-    const placeholderUrl = `https://via.placeholder.com/160x90.png?text=${encodeURIComponent(v.data.title)}`;
-    
-    html += `<div onclick="playVideo('${v.id}')">
-      <img src="${placeholderUrl}" width="160" height="90" alt="Video thumbnail">
-      <div class="videoTitle">${v.data.title}</div>
-    </div>`;
-  });
+    let html = "";
+    selected.forEach(v => {
+      const title = v.data.title || "No Title";
 
-  document.getElementById('homeThumbnails').innerHTML = html;
-}
-  // For each video, create a frame thumbnail
-  selected.forEach(v => {
-    const container = document.createElement("div");
-    container.className = "videoThumbContainer";
-    container.onclick = () => playVideo(v.id);
+      // Extract Google Drive file ID from URL
+      let fileId = "";
+      const match = v.data.url.match(/[-\w]{25,}/); // matches Google Drive file ID
+      if (match) fileId = match[0];
 
-    const titleDiv = document.createElement("div");
-    titleDiv.className = "videoTitle";
-    titleDiv.innerText = v.data.title;
+      // Google Drive thumbnail URL
+      const thumbnailUrl = fileId
+        ? `https://drive.google.com/uc?export=thumbnail&id=${fileId}&sz=w160-h90`
+        : "https://via.placeholder.com/160x90.png?text=No+Thumbnail";
 
-    const img = document.createElement("img");
-    img.width = 160;
-    img.height = 90;
-    img.style.borderRadius = "3px";
-
-    // Create a temporary video element to capture a frame
-    const tempVideo = document.createElement("video");
-    tempVideo.src = v.data.url;
-    tempVideo.crossOrigin = "anonymous"; // required for cross-origin videos
-    tempVideo.muted = true;
-    tempVideo.currentTime = 1; // 1 second into the video
-
-    tempVideo.addEventListener("loadeddata", () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 160;
-      canvas.height = 90;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(tempVideo, 0, 0, 160, 90);
-      img.src = canvas.toDataURL("image/jpeg");
+      html += `<div onclick="playVideo('${v.id}')">
+        <img src="${thumbnailUrl}" width="160" height="90" alt="Video thumbnail">
+        <div class="videoTitle">${title}</div>
+      </div>`;
     });
 
-    container.appendChild(img);
-    container.appendChild(titleDiv);
-    homeThumbnails.appendChild(container);
-  });
+    document.getElementById('homeThumbnails').innerHTML = html;
+
+  } catch (err) {
+    console.error("Error loading videos:", err);
+  }
 }
 // PLAY VIDEO
 window.playVideo = async function(videoId){
