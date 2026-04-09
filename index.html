@@ -482,39 +482,58 @@ async function loadUsers(){
   html+="</table>"; document.getElementById('userList').innerHTML=html;
 }
 
-// LOAD VIDEOS (24 RANDOM) WITH VIDEO FRAME THUMBNAILS
-async function loadVideos(){
-  const snapshot = await getDocs(collection(db,"videos"));
+// LOAD VIDEOS (24 RANDOM) WITH VIDEO FRAMES AS THUMBNAILS
+async function loadVideos() {
+  const snapshot = await getDocs(collection(db, "videos"));
   const allVideos = [];
-  snapshot.forEach(doc => allVideos.push({id: doc.id, data: doc.data()}));
+  snapshot.forEach(doc => allVideos.push({ id: doc.id, data: doc.data() }));
 
   // Pick 24 random videos
   const selected = [];
-  while(selected.length < 24 && allVideos.length > 0){
+  while (selected.length < 24 && allVideos.length > 0) {
     const idx = Math.floor(Math.random() * allVideos.length);
     selected.push(allVideos[idx]);
-    allVideos.splice(idx,1);
+    allVideos.splice(idx, 1);
   }
 
-  // Home thumbnails
-  let html = "";
+  const homeThumbnails = document.getElementById("homeThumbnails");
+  homeThumbnails.innerHTML = "";
+
+  // For each video, create a frame thumbnail
   selected.forEach(v => {
-    let thumbUrl = v.data.url;
+    const container = document.createElement("div");
+    container.className = "videoThumbContainer";
+    container.onclick = () => playVideo(v.id);
 
-    // Google Drive video thumbnail
-    if(thumbUrl.includes("drive.google.com")){
-      const match = thumbUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-      if(match) thumbUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w160-h90`;
-    }
+    const titleDiv = document.createElement("div");
+    titleDiv.className = "videoTitle";
+    titleDiv.innerText = v.data.title;
 
-    html += `
-      <div onclick="playVideo('${v.id}')">
-        <img src="${thumbUrl}" width="160" height="90" style="border:1px solid #000; border-radius:3px; object-fit:cover;">
-        <div class="videoTitle">${v.data.title}</div>
-      </div>
-    `;
+    const img = document.createElement("img");
+    img.width = 160;
+    img.height = 90;
+    img.style.borderRadius = "3px";
+
+    // Create a temporary video element to capture a frame
+    const tempVideo = document.createElement("video");
+    tempVideo.src = v.data.url;
+    tempVideo.crossOrigin = "anonymous"; // required for cross-origin videos
+    tempVideo.muted = true;
+    tempVideo.currentTime = 1; // 1 second into the video
+
+    tempVideo.addEventListener("loadeddata", () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 160;
+      canvas.height = 90;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(tempVideo, 0, 0, 160, 90);
+      img.src = canvas.toDataURL("image/jpeg");
+    });
+
+    container.appendChild(img);
+    container.appendChild(titleDiv);
+    homeThumbnails.appendChild(container);
   });
-  document.getElementById('homeThumbnails').innerHTML = html;
 }
 // PLAY VIDEO
 window.playVideo = async function(videoId){
