@@ -482,7 +482,7 @@ async function loadUsers(){
   html+="</table>"; document.getElementById('userList').innerHTML=html;
 }
 
-// LOAD VIDEOS (24 RANDOM)
+// LOAD VIDEOS (24 RANDOM) WITH VIDEO FRAME THUMBNAILS
 async function loadVideos(){
   const snapshot = await getDocs(collection(db,"videos"));
   const allVideos = [];
@@ -499,8 +499,9 @@ async function loadVideos(){
   // Home thumbnails
   let html = "";
   selected.forEach(v => {
-    // Generate thumbnail for Google Drive URLs
     let thumbUrl = v.data.url;
+
+    // Google Drive video thumbnail
     if(thumbUrl.includes("drive.google.com")){
       const match = thumbUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
       if(match) thumbUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w160-h90`;
@@ -508,14 +509,13 @@ async function loadVideos(){
 
     html += `
       <div onclick="playVideo('${v.id}')">
-        <img src="${thumbUrl}" width="160" height="90" style="border:1px solid #000; border-radius:3px;">
+        <img src="${thumbUrl}" width="160" height="90" style="border:1px solid #000; border-radius:3px; object-fit:cover;">
         <div class="videoTitle">${v.data.title}</div>
       </div>
     `;
   });
   document.getElementById('homeThumbnails').innerHTML = html;
 }
-
 // PLAY VIDEO
 window.playVideo = async function(videoId){
   showSection("player");
