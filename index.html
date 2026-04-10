@@ -301,17 +301,20 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 
 <!-- PROFILE -->
 <div id="profileSection" style="display:none; padding:20px;">
-<div id="profileHeader">
-  <div id="profileAvatar"></div>
+Username: <b id="profileUsername"></b><br>
+Join date: <span id="profileJoinDate"></span><br><br>
 
-  <div id="profileInfo">
-    <div id="profileUsername" class="profileName"></div>
-    <div id="profileBio" class="profileBio"></div>
-    <div id="profileJoinDate" class="profileDate"></div>
-  </div>
+<div id="bioContainer">
+  Bio:<br>
+  <textarea id="bio" rows="5" cols="40"></textarea><br>
 </div>
 
-<br>
+<input type="button" value="Save Bio" id="saveBioBtn"><br>
+<div id="profileStatus"></div><br><br>
+
+<h3>Videos</h3>
+<div id="userVideos"></div>
+
 <div id="uploadSection">
 Title:<br><input type="text" id="videoTitle"><br>
 Thumbnail (o portada del video) URL (optional):<br>
@@ -394,12 +397,6 @@ function getAvatarFromUsername(username){
   return avatarBaseURL + avatarImages[index];
 }
 function createAvatar(name){
-function formatJoinDate(date){
-  const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-
-  return `Joined ${days[date.getDay()]} ${months[date.getMonth()]} ${date.getDate()}`;
-}
   const div = document.createElement("div");
   div.className="avatar";
 
@@ -656,21 +653,9 @@ async function loadProfile(fromButton=false){
   if(!currentUser) return;
   const docSnap=await getDoc(doc(db,"users",currentUser.uid));
   if(!docSnap.exists()) return;
-document.getElementById('profileAvatar').style.backgroundImage =
-  `url(${getAvatarFromUsername(docSnap.data().username)})`;
-
-document.getElementById('profileUsername').innerText =
-  docSnap.data().username;
-
-document.getElementById('profileBio').innerText =
-  docSnap.data().bio || "";
-
-const createdAt = docSnap.data().createdAt.toDate
-  ? docSnap.data().createdAt.toDate()
-  : new Date(docSnap.data().createdAt.seconds * 1000);
-
-document.getElementById('profileJoinDate').innerText =
-  formatJoinDate(createdAt);
+  document.getElementById('profileUsername').innerText=docSnap.data().username;
+  const createdAt=docSnap.data().createdAt.toDate?docSnap.data().createdAt.toDate():new Date(docSnap.data().createdAt.seconds*1000);
+  document.getElementById('profileJoinDate').innerText=createdAt.toDateString();
   document.getElementById('bio').value=docSnap.data().bio||"";
   document.getElementById('bio').readOnly=false;
   document.getElementById('uploadSection').style.display="block";
