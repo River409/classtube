@@ -308,13 +308,8 @@ Join date: <span id="profileJoinDate"></span><br><br>
   Bio:<br>
   <textarea id="bio" rows="5" cols="40"></textarea><br>
 </div>
-<br><br>
 
-Profile Picture (URL):<br>
-<input type="text" id="avatarUrl" placeholder="https://..."><br><br>
-
-<button id="removeAvatarBtn">Remove Profile Picture</button>
-<input type="button" value="Save Profile" id="saveBioBtn"><br>
+<input type="button" value="Save Bio" id="saveBioBtn"><br>
 <div id="profileStatus"></div><br><br>
 
 <h3>Videos</h3>
@@ -350,19 +345,8 @@ Video URL:<br><input type="text" id="videoURL"><br>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { 
-  getFirestore,
-  doc,
-  setDoc,
-  collection,
-  getDocs,
-  addDoc,
-  query,
-  orderBy,
-  getDoc,
-  updateDoc,
-  deleteField
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
 const firebaseConfig = {
   apiKey:"AIzaSyC2QdW6Gq3dnFf2JL4-vET-68M6LvTJUvw",
   authDomain:"classtube2-1436a.firebaseapp.com",
@@ -411,26 +395,6 @@ function getAvatarFromUsername(username){
   }
   const index = Math.abs(hash) % avatarImages.length;
   return avatarBaseURL + avatarImages[index];
-}
-function getAvatar(user){
-  if(!user) return "";
-
-  let avatarUrl = user.avatar;
-
-  // fallback if missing
-  if(!avatarUrl || avatarUrl.trim() === ""){
-    return getAvatarFromUsername(user.username);
-  }
-
-  // fix Google Drive links
-  if(avatarUrl.includes("drive.google.com/file")){
-    const match = avatarUrl.match(/\/d\/([^/]+)/);
-    if(match){
-      return `https://drive.google.com/thumbnail?id=${match[1]}`;
-    }
-  }
-
-  return avatarUrl;
 }
 function createAvatar(name){
   const div = document.createElement("div");
@@ -497,56 +461,29 @@ document.getElementById("logoutBtn").onclick=async ()=>{ await signOut(auth); sh
 document.getElementById("myProfileBtn").onclick=()=>loadProfile(true);
 document.getElementById("homeBtn").onclick=()=>{ showSection('feed'); loadVideos(); loadUsers(); };
 
-// SAVE BIO AND AVATAR
-document.getElementById('saveBioBtn').onclick = async () => {
-  const bio = document.getElementById('bio').value.trim();
-  const avatarUrl = document.getElementById('avatarUrl').value.trim();
-
-  if (!currentUser) return;
-
-  await updateDoc(doc(db, "users", currentUser.uid), {
-    bio,
-    avatar: avatarUrl || null
-  });
-
-  document.getElementById('profileStatus').innerText = "Profile saved!";
+// SAVE BIO
+document.getElementById('saveBioBtn').onclick=async ()=>{
+  const bio=document.getElementById('bio').value.trim();
+  if(!currentUser) return;
+  try{ await updateDoc(doc(db,"users",currentUser.uid), { bio }); document.getElementById('profileStatus').innerText="Bio saved!"; }
+  catch(err){ document.getElementById('profileStatus').innerText="Error: "+err.message; }
 };
 
 // LOAD USERS
-async function loadUsers() {
-  const snapshot = await getDocs(collection(db, "users"));
-
-  let html = `
-    <table border="1" cellpadding="5">
-      <tr>
-        <th>Avatar</th>
-        <th>Username</th>
-        <th>Bio</th>
-      </tr>
-  `;
-
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-
-    // ✅ correct place (AFTER data exists)
-    const avatarUrl = getAvatar(data);
-
-    html += `
-      <tr onclick="showUserProfile('${docSnap.id}')">
-        <td>
-          <div class="avatar"
-               style="background-image:url('${avatarUrl}')">
-          </div>
-        </td>
-        <td>${data.username || ""}</td>
-        <td>${data.bio || ""}</td>
-      </tr>
-    `;
+async function loadUsers(){
+  const snapshot=await getDocs(collection(db,"users"));
+  let html="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
+  snapshot.forEach(doc=>{
+    const data=doc.data();
+    html+=`<tr onclick="showUserProfile('${doc.id}')">
+      <td>${createAvatar(data.username).outerHTML}</td>
+      <td>${data.username}</td>
+      <td>${data.bio||""}</td>
+    </tr>`;
   });
-
-  html += "</table>";
-  document.getElementById("userList").innerHTML = html;
+  html+="</table>"; document.getElementById('userList').innerHTML=html;
 }
+
 // LOAD VIDEOS (24 RANDOM) — using stored thumbnails
 async function loadVideos() {
   const snapshot = await getDocs(collection(db, "videos"));
@@ -573,6 +510,14 @@ async function loadVideos() {
 
   document.getElementById('homeThumbnails').innerHTML = html;
 }
+// PLAY VIDEO
+window.playVideo = async function(videoId){
+  showSection("player");
+  currentVideoId = videoId;
+  const docSnap = await getDoc(doc(db,"videos",videoId));
+  if(!docSnap.exists()) return;
+  const data = docSnap.data();
+
   // Increment views
   const newViews = (data.views || 0) + 1;
   await updateDoc(doc(db,"videos",videoId), { views: newViews });
@@ -619,97 +564,30 @@ async function loadVideos() {
   });
   document.getElementById('otherVideos').innerHTML = htmlOther;
 };
-// =====================
-// PLAY VIDEO (FIXED CLEAN VERSION)
-// =====================
-window.playVideo = async function(videoId) {
+// PLAY VIDEO
+window.playVideo=async function(videoId){
   showSection("player");
-  currentVideoId = videoId;
+  currentVideoId=videoId;
+  const docSnap=await getDoc(doc(db,"videos",videoId));
+  if(!docSnap.exists()) return;
+  const data=docSnap.data();
+// Increment views
+const newViews = (data.views || 0) + 1;
+await updateDoc(doc(db,"videos",videoId), { views: newViews });
+data.views = newViews;
+  document.getElementById('playerTitle').innerText=data.title;
+  const avatarUrl = getAvatarFromUsername(data.user);
 
-  const docSnap = await getDoc(doc(db, "videos", videoId));
-  if (!docSnap.exists()) return;
+document.getElementById('playerUploader').innerHTML=`
+  <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
+  <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>
+`;
+  document.getElementById('playerIframe').src=data.url.replace("/view","/preview");
+  document.getElementById('playerDescription').innerText=data.description||"";
+  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
+  const diffDays = Math.floor((new Date()-createdAt)/(1000*60*60*24));
+  document.getElementById('playerStats').innerText=(data.views||0)+" views • "+(diffDays<30?diffDays+" days ago":Math.floor(diffDays/30)+" months ago");
 
-  const data = docSnap.data();
-
-  // increment views
-  const newViews = (data.views || 0) + 1;
-  await updateDoc(doc(db, "videos", videoId), { views: newViews });
-
-  // title
-  document.getElementById('playerTitle').innerText = data.title;
-
-  // uploader avatar (FIXED)
-  const userDoc = await getDoc(doc(db, "users", data.userId));
-  const userData = userDoc.exists() ? userDoc.data() : null;
-
-  const avatarUrl = userData ? getAvatar(userData) : getAvatarFromUsername(data.user);
-
-  document.getElementById('playerUploader').innerHTML = `
-    <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
-    <span class='channelHeader' onclick="showUserProfile('${data.userId}')">
-      ${data.user}
-    </span>
-  `;
-
-  // video URL fix
-  let videoUrl = data.url;
-
-  if (videoUrl.includes("drive.google.com")) {
-    const match = videoUrl.match(/\/d\/([^/]+)/);
-    if (match) {
-      videoUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
-    }
-  }
-
-  document.getElementById('playerIframe').src = videoUrl;
-
-  document.getElementById('playerDescription').innerText = data.description || "";
-
-  const createdAt = data.createdAt.toDate
-    ? data.createdAt.toDate()
-    : new Date(data.createdAt.seconds * 1000);
-
-  const diffDays = Math.floor((new Date() - createdAt) / (1000 * 60 * 60 * 24));
-
-  document.getElementById('playerStats').innerText =
-    `${newViews} views • ${
-      diffDays < 30 ? diffDays + " days ago" : Math.floor(diffDays / 30) + " months ago"
-    }`;
-
-  // =====================
-  // SIDEBAR VIDEOS (FIXED)
-  // =====================
-  const snapshot = await getDocs(collection(db, "videos"));
-  let all = [];
-
-  snapshot.forEach(d => {
-    if (d.id !== videoId) all.push({ id: d.id, data: d.data() });
-  });
-
-  let htmlOther = "";
-
-  all.slice(0, 6).forEach(v => {
-    let thumb = v.data.thumbnail;
-
-    if (!thumb && v.data.url.includes("drive.google.com")) {
-      const match = v.data.url.match(/\/d\/([^/]+)/);
-      if (match) {
-        thumb = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w140-h80`;
-      }
-    }
-
-    if (!thumb) thumb = "https://via.placeholder.com/140x80.png?text=Video";
-
-    htmlOther += `
-      <div onclick="playVideo('${v.id}')">
-        <div>${v.data.title}</div>
-        <img src="${thumb}" width="140" height="80" style="border:1px solid #000;">
-      </div>
-    `;
-  });
-
-  document.getElementById('otherVideos').innerHTML = htmlOther;
-};
   // RANDOM 6 VIDEOS SIDEBAR
   const snapshot=await getDocs(collection(db,"videos"));
   const allVid=[];
@@ -731,11 +609,9 @@ window.playVideo = async function(videoId) {
 document.getElementById('postVideoBtn').onclick=async ()=>{
   const title=document.getElementById('videoTitle').value.trim();
   const url=document.getElementById('videoURL').value.trim();
-  const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-  const username = userDoc.data().username;
   const description=document.getElementById('videoDescription').value.trim();
   if(!title||!url){ alert("Title and URL required"); return; }
-  await addDoc(collection(db,"videos"),{ title,url,description,user: username,userId:currentUser.uid,createdAt:new Date(),views:0 });
+  await addDoc(collection(db,"videos"),{ title,url,description,user:currentUser.displayName||currentUser.email,userId:currentUser.uid,createdAt:new Date(),views:0 });
   document.getElementById('videoTitle').value="";
   document.getElementById('videoURL').value="";
   document.getElementById('videoDescription').value="";
@@ -801,71 +677,27 @@ async function loadUserVideos(profileUid){
   document.getElementById('userVideos').innerHTML=html;
 }
 
-// SEARCH (FIXED VERSION)
-document.getElementById('searchInput').addEventListener('input', async () => {
-  const queryText = document.getElementById('searchInput').value.toLowerCase();
-
-  // =====================
-  // SEARCH VIDEOS
-  // =====================
-  const videosSnap = await getDocs(collection(db, "videos"));
-  let videoHtml = "";
-
-  videosSnap.forEach(docSnap => {
-    const data = docSnap.data();
-
-    if (data.title.toLowerCase().includes(queryText)) {
-      const thumb = data.thumbnail || "https://via.placeholder.com/160x90.png?text=Video";
-
-      videoHtml += `
-        <div onclick="playVideo('${docSnap.id}')">
-          <img src="${thumb}" width="160" height="90" style="object-fit:cover; border:1px solid #000;">
-          <div class="videoTitle">${data.title}</div>
-        </div>
-      `;
-    }
+// SEARCH
+document.getElementById('searchInput').addEventListener('input',async ()=>{
+  const queryText=document.getElementById('searchInput').value.toLowerCase();
+  const videosSnap=await getDocs(collection(db,"videos"));
+  let html="";
+  videosSnap.forEach(doc=>{
+    const data=doc.data();
+    if(data.title.toLowerCase().includes(queryText)) html+=`<div onclick="playVideo('${doc.id}')"><iframe src="${data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe><div class="videoTitle">${data.title}</div></div>`;
   });
+  document.getElementById('homeThumbnails').innerHTML=html;
 
-  document.getElementById('homeThumbnails').innerHTML = videoHtml;
-
-  // =====================
-  // SEARCH USERS
-  // =====================
-  const usersSnap = await getDocs(collection(db, "users"));
-  let userHtml = `
-    <table border="1" cellpadding="5">
-      <tr>
-        <th>Avatar</th>
-        <th>Username</th>
-        <th>Bio</th>
-      </tr>
-  `;
-
-  usersSnap.forEach(docSnap => {
-    const data = docSnap.data();
-
-    if (data.username.toLowerCase().includes(queryText)) {
-
-      // IMPORTANT: use SAME avatar system everywhere
-      const avatarUrl = getAvatar(data);
-
-      userHtml += `
-        <tr onclick="showUserProfile('${docSnap.id}')">
-          <td>
-            <div class="avatar"
-                 style="background-image:url('${avatarUrl}')">
-            </div>
-          </td>
-          <td>${data.username || ""}</td>
-          <td>${data.bio || ""}</td>
-        </tr>
-      `;
-    }
+  const usersSnap=await getDocs(collection(db,"users"));
+  let userHtml="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
+  usersSnap.forEach(doc=>{
+    const data=doc.data();
+    if(data.username.toLowerCase().includes(queryText)) userHtml+=`<tr onclick="showUserProfile('${doc.id}')"><td>${createAvatar(data.username).outerHTML}</td><td>${data.username}</td><td>${data.bio||""}</td></tr>`;
   });
-
-  userHtml += "</table>";
-  document.getElementById('userList').innerHTML = userHtml;
+  userHtml+="</table>";
+  document.getElementById('userList').innerHTML=userHtml;
 });
+
 showSection("login");
 </script>
 <div id="footer" style="margin-top:40px; padding:10px; text-align:center; border-top:1px solid #000; background:#eee;">
