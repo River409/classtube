@@ -249,6 +249,7 @@ table { border:2px solid #000; background:#eee; }
 <span id="headerLinks" style="float:right; display:none;">
 <a href="#" id="homeBtn">Home</a> |
 <a href="#" id="myProfileBtn">Profile</a> |
+<a href="#" id="messagesBtn">Messages</a> |
 <a href="#" id="logoutBtn">Logout</a>
 </span>
 </td>
@@ -341,7 +342,24 @@ Video URL:<br><input type="text" id="videoURL"><br>
 <div id="otherVideos"></div>
 </div>
 </div>
+<!-- MESSAGES -->
+<div id="messagesSection" style="display:none; padding:20px;">
 
+<h2>Messages</h2>
+
+Send to username:<br>
+<input type="text" id="messageUser"><br><br>
+
+Message:<br>
+<input type="text" id="messageText"><br>
+
+<input type="button" value="Send Message" id="sendMessageBtn"><br><br>
+
+<h3>Inbox</h3>
+
+<div id="messageList"></div>
+
+</div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
@@ -417,8 +435,8 @@ function showSection(section){
   document.getElementById("feedSection").style.display = (section==="feed")?"block":"none";
   document.getElementById("profileSection").style.display = (section==="profile")?"block":"none";
   document.getElementById("videoPlayerSection").style.display = (section==="player")?"block":"none";
+  document.getElementById("messagesSection").style.display = (section==="messages")?"block":"none";
 }
-
 // TABS
 document.getElementById('videosTab').onclick = ()=>{ document.getElementById('videosSection').style.display="block"; document.getElementById('peopleSection').style.display="none"; };
 document.getElementById('peopleTab').onclick = ()=>{ document.getElementById('videosSection').style.display="none"; document.getElementById('peopleSection').style.display="block"; };
@@ -460,7 +478,11 @@ document.getElementById("logoutBtn").onclick=async ()=>{ await signOut(auth); sh
 // PROFILE BUTTON
 document.getElementById("myProfileBtn").onclick=()=>loadProfile(true);
 document.getElementById("homeBtn").onclick=()=>{ showSection('feed'); loadVideos(); loadUsers(); };
-
+// MESSAGES BUTTON
+document.getElementById("messagesBtn").onclick = () => {
+  showSection("messages");
+  loadMessages();
+};
 // SAVE BIO
 document.getElementById('saveBioBtn').onclick=async ()=>{
   const bio=document.getElementById('bio').value.trim();
@@ -697,6 +719,54 @@ document.getElementById('searchInput').addEventListener('input',async ()=>{
   userHtml+="</table>";
   document.getElementById('userList').innerHTML=userHtml;
 });
+/* MESSAGES */
+document.getElementById("sendMessageBtn").onclick = async () => {
+
+  const toUser = document.getElementById("messageUser").value.trim();
+  const text = document.getElementById("messageText").value.trim();
+
+  if (!toUser || !text || !currentUser) return;
+
+  await addDoc(collection(db, "messages"), {
+    from: currentUser.email,
+    to: toUser,
+    text,
+    createdAt: new Date()
+  });
+
+  document.getElementById("messageText").value = "";
+
+  loadMessages();
+};
+async function loadMessages(){
+
+  const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+
+  let html = "";
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+
+    if (
+      data.to === currentUser.email ||
+      data.from === currentUser.email
+    ) {
+      html += `
+        <div style="border-bottom:1px solid #ccc;padding:5px">
+          <b>${data.from}</b> → <b>${data.to}</b>: ${data.text}
+        </div>
+      `;
+    }
+  });
+
+  document.getElementById("messageList").innerHTML = html;
+}
+});
+
+document.getElementById("messageList").innerHTML=html;
+
+}
 
 showSection("login");
 </script>
