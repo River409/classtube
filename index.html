@@ -308,7 +308,12 @@ Join date: <span id="profileJoinDate"></span><br><br>
   Bio:<br>
   <textarea id="bio" rows="5" cols="40"></textarea><br>
 </div>
+<br><br>
 
+Profile Picture (URL):<br>
+<input type="text" id="avatarUrl" placeholder="https://..."><br><br>
+
+<button id="removeAvatarBtn">Remove Profile Picture</button>
 <input type="button" value="Save Bio" id="saveBioBtn"><br>
 <div id="profileStatus"></div><br><br>
 
@@ -461,29 +466,58 @@ document.getElementById("logoutBtn").onclick=async ()=>{ await signOut(auth); sh
 document.getElementById("myProfileBtn").onclick=()=>loadProfile(true);
 document.getElementById("homeBtn").onclick=()=>{ showSection('feed'); loadVideos(); loadUsers(); };
 
-// SAVE BIO
-document.getElementById('saveBioBtn').onclick=async ()=>{
-  const bio=document.getElementById('bio').value.trim();
-  if(!currentUser) return;
-  try{ await updateDoc(doc(db,"users",currentUser.uid), { bio }); document.getElementById('profileStatus').innerText="Bio saved!"; }
-  catch(err){ document.getElementById('profileStatus').innerText="Error: "+err.message; }
+// SAVE BIO AND AVATAR
+document.getElementById('saveBioBtn').onclick = async () => {
+  const bio = document.getElementById('bio').value.trim();
+  const avatarUrl = document.getElementById('avatarUrl').value.trim();
+
+  if (!currentUser) return;
+
+  await updateDoc(doc(db, "users", currentUser.uid), {
+    bio,
+    avatar: avatarUrl || null
+  });
+
+  document.getElementById('profileStatus').innerText = "Profile saved!";
 };
 
 // LOAD USERS
 async function loadUsers(){
-  const snapshot=await getDocs(collection(db,"users"));
-  let html="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
-  snapshot.forEach(doc=>{
-    const data=doc.data();
-    html+=`<tr onclick="showUserProfile('${doc.id}')">
-      <td>${createAvatar(data.username).outerHTML}</td>
-      <td>${data.username}</td>
-      <td>${data.bio||""}</td>
-    </tr>`;
-  });
-  html+="</table>"; document.getElementById('userList').innerHTML=html;
-}
+  const snapshot = await getDocs(collection(db, "users"));
 
+  let html = `
+    <table border="1" cellpadding="5">
+      <tr>
+        <th>Avatar</th>
+        <th>Username</th>
+        <th>Bio</th>
+      </tr>
+  `;
+
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+
+    // SAFE fallback avatar system
+    const avatarUrl = data.avatar || getAvatarFromUsername(data.username);
+
+    html += `
+      <tr onclick="showUserProfile('${docSnap.id}')">
+        <td>
+          <div class="avatar"
+               style="background-image:url('${avatarUrl}')">
+          </div>
+        </td>
+
+        <td>${data.username || "Unknown"}</td>
+        <td>${data.bio || ""}</td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  document.getElementById("userList").innerHTML = html;
+}
 // LOAD VIDEOS (24 RANDOM) — using stored thumbnails
 async function loadVideos() {
   const snapshot = await getDocs(collection(db, "videos"));
