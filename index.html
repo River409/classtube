@@ -443,16 +443,29 @@ document.getElementById('peopleTab').onclick = ()=>{ document.getElementById('vi
 
 // AUTH STATE
 onAuthStateChanged(auth, async user => {
-  if(!user){ showSection("login"); headerLinks.style.display="none"; status.innerText="Please login."; return; }
-  currentUser=user;
-  showSection("feed");
-  headerLinks.style.display="inline";
-  userEmail.innerText=user.email;
-  await loadUsers();
-  await loadVideos();
-  await loadProfile();
-});
+  try {
+    if(!user){
+      showSection("login");
+      headerLinks.style.display="none";
+      status.innerText="Please login.";
+      return;
+    }
 
+    currentUser=user;
+    showSection("feed");
+    headerLinks.style.display="inline";
+    userEmail.innerText=user.email;
+
+    await loadUsers();
+    await loadVideos();
+    await loadProfile();
+
+  } catch(err){
+    console.error("Auth error:", err);
+    showSection("login");
+    status.innerText="Error loading app.";
+  }
+});
 // SIGNUP/LOGIN/LOGOUT
 document.getElementById('signupBtn').onclick=async ()=>{
   const username=document.getElementById('signupUsername').value.trim();
@@ -532,14 +545,6 @@ async function loadVideos() {
 
   document.getElementById('homeThumbnails').innerHTML = html;
 }
-// PLAY VIDEO
-window.playVideo = async function(videoId){
-  showSection("player");
-  currentVideoId = videoId;
-  const docSnap = await getDoc(doc(db,"videos",videoId));
-  if(!docSnap.exists()) return;
-  const data = docSnap.data();
-
   // Increment views
   const newViews = (data.views || 0) + 1;
   await updateDoc(doc(db,"videos",videoId), { views: newViews });
@@ -738,9 +743,25 @@ document.getElementById("sendMessageBtn").onclick = async () => {
 
   loadMessages();
 };
-async function loadMessages(){
+document.getElementById("sendMessageBtn").onclick = async () => {
+  const toUser = document.getElementById("messageUser").value.trim();
+  const text = document.getElementById("messageText").value.trim();
 
-  const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+  if(!toUser || !text || !currentUser) return;
+
+  await addDoc(collection(db,"messages"), {
+    from: currentUser.email,
+    to: toUser,
+    text,
+    createdAt: new Date()
+  });
+
+  document.getElementById("messageText").value = "";
+  loadMessages();
+};
+
+async function loadMessages(){
+  const q = query(collection(db,"messages"), orderBy("createdAt","desc"));
   const snapshot = await getDocs(q);
 
   let html = "";
@@ -748,10 +769,7 @@ async function loadMessages(){
   snapshot.forEach(doc => {
     const data = doc.data();
 
-    if (
-      data.to === currentUser.email ||
-      data.from === currentUser.email
-    ) {
+    if(data.to === currentUser.email || data.from === currentUser.email){
       html += `
         <div style="border-bottom:1px solid #ccc;padding:5px">
           <b>${data.from}</b> → <b>${data.to}</b>: ${data.text}
@@ -762,12 +780,6 @@ async function loadMessages(){
 
   document.getElementById("messageList").innerHTML = html;
 }
-});
-
-document.getElementById("messageList").innerHTML=html;
-
-}
-
 showSection("login");
 </script>
 <div id="footer" style="margin-top:40px; padding:10px; text-align:center; border-top:1px solid #000; background:#eee;">
