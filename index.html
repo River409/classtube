@@ -609,9 +609,11 @@ document.getElementById('playerUploader').innerHTML=`
 document.getElementById('postVideoBtn').onclick=async ()=>{
   const title=document.getElementById('videoTitle').value.trim();
   const url=document.getElementById('videoURL').value.trim();
+  const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+  const username = userDoc.data().username;
   const description=document.getElementById('videoDescription').value.trim();
   if(!title||!url){ alert("Title and URL required"); return; }
-  await addDoc(collection(db,"videos"),{ title,url,description,user:currentUser.displayName||currentUser.email,userId:currentUser.uid,createdAt:new Date(),views:0 });
+  await addDoc(collection(db,"videos"),{ title,url,description,user: username,userId:currentUser.uid,createdAt:new Date(),views:0 });
   document.getElementById('videoTitle').value="";
   document.getElementById('videoURL').value="";
   document.getElementById('videoDescription').value="";
