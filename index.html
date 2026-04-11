@@ -347,9 +347,8 @@ Video URL:<br><input type="text" id="videoURL"><br>
 
 <h2>Messages</h2>
 
-Send to username:<br>
-<input type="text" id="messageUser"><br><br>
-
+Send to email:
+<input type="text" id="messageUser" placeholder="example@gmail.com">
 Message:<br>
 <input type="text" id="messageText"><br>
 
@@ -443,27 +442,36 @@ document.getElementById('peopleTab').onclick = ()=>{ document.getElementById('vi
 
 // AUTH STATE
 onAuthStateChanged(auth, async user => {
-  try {
-    if(!user){
-      showSection("login");
-      headerLinks.style.display="none";
-      status.innerText="Please login.";
-      return;
-    }
-
-    currentUser=user;
-    showSection("feed");
-    headerLinks.style.display="inline";
-    userEmail.innerText=user.email;
-
-    await loadUsers();
-    await loadVideos();
-    await loadProfile();
-
-  } catch(err){
-    console.error("Auth error:", err);
+  if (!user) {
     showSection("login");
-    status.innerText="Error loading app.";
+    headerLinks.style.display = "none";
+    status.innerText = "Please login.";
+    return;
+  }
+
+  currentUser = user;
+  currentUser.email = user.email.toLowerCase();
+
+  showSection("feed");
+  headerLinks.style.display = "inline";
+  userEmail.innerText = user.email;
+
+  try {
+    await loadUsers();
+  } catch (e) {
+    console.error("loadUsers failed:", e);
+  }
+
+  try {
+    await loadVideos();
+  } catch (e) {
+    console.error("loadVideos failed:", e);
+  }
+
+  try {
+    await loadProfile();
+  } catch (e) {
+    console.error("loadProfile failed:", e);
   }
 });
 // SIGNUP/LOGIN/LOGOUT
@@ -506,17 +514,28 @@ document.getElementById('saveBioBtn').onclick=async ()=>{
 
 // LOAD USERS
 async function loadUsers(){
-  const snapshot=await getDocs(collection(db,"users"));
-  let html="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
-  snapshot.forEach(doc=>{
-    const data=doc.data();
-    html+=`<tr onclick="showUserProfile('${doc.id}')">
-      <td>${createAvatar(data.username).outerHTML}</td>
-      <td>${data.username}</td>
-      <td>${data.bio||""}</td>
-    </tr>`;
-  });
-  html+="</table>"; document.getElementById('userList').innerHTML=html;
+  try {
+    const snapshot = await getDocs(collection(db,"users"));
+
+    let html = "<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      html += `
+        <tr onclick="showUserProfile('${doc.id}')">
+          <td>${createAvatar(data.username || "user").outerHTML}</td>
+          <td>${data.username || "Unknown"}</td>
+          <td>${data.bio || ""}</td>
+        </tr>
+      `;
+    });
+
+    html += "</table>";
+    document.getElementById('userList').innerHTML = html;
+
+  } catch (err) {
+    console.error("loadUsers error:", err);
+  }
 }
 
 // LOAD VIDEOS (24 RANDOM) — using stored thumbnails
@@ -726,8 +745,7 @@ document.getElementById('searchInput').addEventListener('input',async ()=>{
 });
 /* MESSAGES */
 document.getElementById("sendMessageBtn").onclick = async () => {
-
-  const toUser = document.getElementById("messageUser").value.trim();
+  const toUser = document.getElementById("messageUser").value.trim().toLowerCase();
   const text = document.getElementById("messageText").value.trim();
 
   if (!toUser || !text || !currentUser) return;
@@ -740,7 +758,6 @@ document.getElementById("sendMessageBtn").onclick = async () => {
   });
 
   document.getElementById("messageText").value = "";
-
   loadMessages();
 };
 document.getElementById("sendMessageBtn").onclick = async () => {
@@ -760,8 +777,8 @@ document.getElementById("sendMessageBtn").onclick = async () => {
   loadMessages();
 };
 
-async function loadMessages(){
-  const q = query(collection(db,"messages"), orderBy("createdAt","desc"));
+async function loadMessages() {
+  const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
 
   let html = "";
@@ -769,10 +786,14 @@ async function loadMessages(){
   snapshot.forEach(doc => {
     const data = doc.data();
 
-    if(data.to === currentUser.email || data.from === currentUser.email){
+    if (
+      data.to === currentUser.email ||
+      data.from === currentUser.email
+    ) {
       html += `
-        <div style="border-bottom:1px solid #ccc;padding:5px">
-          <b>${data.from}</b> → <b>${data.to}</b>: ${data.text}
+        <div style="border-bottom:1px solid #ccc; padding:6px">
+          <b>${data.from}</b> → <b>${data.to}</b><br>
+          ${data.text}
         </div>
       `;
     }
