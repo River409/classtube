@@ -441,37 +441,30 @@ document.getElementById('videosTab').onclick = ()=>{ document.getElementById('vi
 document.getElementById('peopleTab').onclick = ()=>{ document.getElementById('videosSection').style.display="none"; document.getElementById('peopleSection').style.display="block"; };
 
 // AUTH STATE
-onAuthStateChanged(auth, async user => {
-  if (!user) {
-    showSection("login");
-    headerLinks.style.display = "none";
-    status.innerText = "Please login.";
-    return;
-  }
-
-  currentUser = user;
-  currentUser.email = user.email.toLowerCase();
-
-  showSection("feed");
-  headerLinks.style.display = "inline";
-  userEmail.innerText = user.email;
-
+onAuthStateChanged(auth, async (user) => {
   try {
+    if (!user) {
+      currentUser = null;
+      showSection("login");
+      headerLinks.style.display = "none";
+      status.innerText = "Please login.";
+      return;
+    }
+
+    currentUser = user;
+
+    showSection("feed");
+    headerLinks.style.display = "inline";
+    userEmail.innerText = user.email;
+
     await loadUsers();
-  } catch (e) {
-    console.error("loadUsers failed:", e);
-  }
-
-  try {
     await loadVideos();
-  } catch (e) {
-    console.error("loadVideos failed:", e);
-  }
-
-  try {
     await loadProfile();
-  } catch (e) {
-    console.error("loadProfile failed:", e);
+
+  } catch (err) {
+    console.error("Auth state error:", err);
+    showSection("login");
+    status.innerText = "Error loading session. Check console.";
   }
 });
 // SIGNUP/LOGIN/LOGOUT
@@ -743,31 +736,23 @@ document.getElementById('searchInput').addEventListener('input',async ()=>{
   userHtml+="</table>";
   document.getElementById('userList').innerHTML=userHtml;
 });
-/* MESSAGES */
+/* =========================
+   MESSAGES
+========================= */
+
+document.getElementById("messagesBtn").onclick = () => {
+  showSection("messages");
+  loadMessages();
+};
+
 document.getElementById("sendMessageBtn").onclick = async () => {
-  const toUser = document.getElementById("messageUser").value.trim().toLowerCase();
+  const toUser = document.getElementById("messageUser").value.trim();
   const text = document.getElementById("messageText").value.trim();
 
   if (!toUser || !text || !currentUser) return;
 
   await addDoc(collection(db, "messages"), {
-    from: currentUser.email,
-    to: toUser,
-    text,
-    createdAt: new Date()
-  });
-
-  document.getElementById("messageText").value = "";
-  loadMessages();
-};
-document.getElementById("sendMessageBtn").onclick = async () => {
-  const toUser = document.getElementById("messageUser").value.trim();
-  const text = document.getElementById("messageText").value.trim();
-
-  if(!toUser || !text || !currentUser) return;
-
-  await addDoc(collection(db,"messages"), {
-    from: currentUser.email,
+    from: currentUser.email,   // EMAIL MODE (as you decided)
     to: toUser,
     text,
     createdAt: new Date()
@@ -783,17 +768,16 @@ async function loadMessages() {
 
   let html = "";
 
-  snapshot.forEach(doc => {
-    const data = doc.data();
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
 
     if (
       data.to === currentUser.email ||
       data.from === currentUser.email
     ) {
       html += `
-        <div style="border-bottom:1px solid #ccc; padding:6px">
-          <b>${data.from}</b> → <b>${data.to}</b><br>
-          ${data.text}
+        <div style="border-bottom:1px solid #ccc;padding:5px">
+          <b>${data.from}</b> → <b>${data.to}</b>: ${data.text}
         </div>
       `;
     }
