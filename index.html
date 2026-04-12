@@ -740,30 +740,48 @@ document.getElementById("sendMessageBtn").onclick = async () => {
 
 async function loadMessages() {
   try {
-    const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
+    if (!currentUser || !currentUser.email) return;
 
-    let html = "";
+    const snapshot = await getDocs(collection(db, "messages"));
+
+    const myEmail = currentUser.email.trim().toLowerCase();
+
+    const messages = [];
 
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
-
-      if (
-        data.to === currentUser.email ||
-        data.from === currentUser.email
-      ) {
-        html += `
-          <div style="border-bottom:1px solid #ccc;padding:5px">
-            <b>${data.from}</b> → <b>${data.to}</b>: ${data.text}
-          </div>
-        `;
-      }
+      messages.push(data);
     });
 
-    document.getElementById("messageList").innerHTML = html;
+    messages.sort((a, b) => {
+      const aTime = a.createdAt?.seconds || 0;
+      const bTime = b.createdAt?.seconds || 0;
+      return bTime - aTime;
+    });
+
+    let html = "";
+
+    messages.forEach(data => {
+      const to = (data.to || "").trim().toLowerCase();
+      const from = (data.from || "").trim().toLowerCase();
+
+      if (to !== myEmail && from !== myEmail) return;
+
+      html += `
+        <div style="border-bottom:1px solid #ccc;padding:6px">
+          <b>${data.from}</b> → <b>${data.to}</b><br>
+          ${data.text}
+        </div>
+      `;
+    });
+
+    document.getElementById("messageList").innerHTML =
+      html || "<i>No messages yet.</i>";
 
   } catch (err) {
     console.error("loadMessages error:", err);
+    document.getElementById("messageList").innerHTML =
+      "<span style='color:red;'>Failed to load messages</span>";
   }
 }
 showSection("login");
