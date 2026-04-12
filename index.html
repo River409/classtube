@@ -492,11 +492,6 @@ document.getElementById("logoutBtn").onclick=async ()=>{ await signOut(auth); sh
 // PROFILE BUTTON
 document.getElementById("myProfileBtn").onclick=()=>loadProfile(true);
 document.getElementById("homeBtn").onclick=()=>{ showSection('feed'); loadVideos(); loadUsers(); };
-// MESSAGES BUTTON
-document.getElementById("messagesBtn").onclick = () => {
-  showSection("messages");
-  loadMessages();
-};
 // SAVE BIO
 document.getElementById('saveBioBtn').onclick=async ()=>{
   const bio=document.getElementById('bio').value.trim();
@@ -557,23 +552,6 @@ async function loadVideos() {
 
   document.getElementById('homeThumbnails').innerHTML = html;
 }
-  // Increment views
-  const newViews = (data.views || 0) + 1;
-  await updateDoc(doc(db,"videos",videoId), { views: newViews });
-  data.views = newViews;
-
-  document.getElementById('playerTitle').innerText = data.title;
-  const avatarUrl = getAvatarFromUsername(data.user);
-  document.getElementById('playerUploader').innerHTML = `
-    <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
-    <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>
-  `;
-  document.getElementById('playerIframe').src = data.url.replace("/view","/preview");
-  document.getElementById('playerDescription').innerText = data.description || "";
-  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
-  const diffDays = Math.floor((new Date() - createdAt)/(1000*60*60*24));
-  document.getElementById('playerStats').innerText = (data.views||0) + " views • " + (diffDays < 30 ? diffDays + " days ago" : Math.floor(diffDays/30) + " months ago");
-
   // RANDOM 6 VIDEOS SIDEBAR with thumbnails
   const snapshot = await getDocs(collection(db,"videos"));
   const allVid = [];
@@ -762,27 +740,32 @@ document.getElementById("sendMessageBtn").onclick = async () => {
 };
 
 async function loadMessages() {
-  const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
-  const snapshot = await getDocs(q);
+  try {
+    const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
 
-  let html = "";
+    let html = "";
 
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
 
-    if (
-      data.to === currentUser.email ||
-      data.from === currentUser.email
-    ) {
-      html += `
-        <div style="border-bottom:1px solid #ccc;padding:5px">
-          <b>${data.from}</b> → <b>${data.to}</b>: ${data.text}
-        </div>
-      `;
-    }
-  });
+      if (
+        data.to === currentUser.email ||
+        data.from === currentUser.email
+      ) {
+        html += `
+          <div style="border-bottom:1px solid #ccc;padding:5px">
+            <b>${data.from}</b> → <b>${data.to}</b>: ${data.text}
+          </div>
+        `;
+      }
+    });
 
-  document.getElementById("messageList").innerHTML = html;
+    document.getElementById("messageList").innerHTML = html;
+
+  } catch (err) {
+    console.error("loadMessages error:", err);
+  }
 }
 showSection("login");
 </script>
