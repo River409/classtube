@@ -249,7 +249,6 @@ table { border:2px solid #000; background:#eee; }
 <span id="headerLinks" style="float:right; display:none;">
 <a href="#" id="homeBtn">Home</a> |
 <a href="#" id="myProfileBtn">Profile</a> |
-<a href="#" id="messagesBtn">Messages</a> |
 <a href="#" id="logoutBtn">Logout</a>
 </span>
 </td>
@@ -342,23 +341,7 @@ Video URL:<br><input type="text" id="videoURL"><br>
 <div id="otherVideos"></div>
 </div>
 </div>
-<!-- MESSAGES -->
-<div id="messagesSection" style="display:none; padding:20px;">
 
-<h2>Messages</h2>
-
-Send to email:
-<input type="text" id="messageUser" placeholder="example@gmail.com">
-Message:<br>
-<input type="text" id="messageText"><br>
-
-<input type="button" value="Send Message" id="sendMessageBtn"><br><br>
-
-<h3>Inbox</h3>
-
-<div id="messageList"></div>
-
-</div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
@@ -434,39 +417,24 @@ function showSection(section){
   document.getElementById("feedSection").style.display = (section==="feed")?"block":"none";
   document.getElementById("profileSection").style.display = (section==="profile")?"block":"none";
   document.getElementById("videoPlayerSection").style.display = (section==="player")?"block":"none";
-  document.getElementById("messagesSection").style.display = (section==="messages")?"block":"none";
 }
+
 // TABS
 document.getElementById('videosTab').onclick = ()=>{ document.getElementById('videosSection').style.display="block"; document.getElementById('peopleSection').style.display="none"; };
 document.getElementById('peopleTab').onclick = ()=>{ document.getElementById('videosSection').style.display="none"; document.getElementById('peopleSection').style.display="block"; };
 
 // AUTH STATE
-onAuthStateChanged(auth, async (user) => {
-  try {
-    if (!user) {
-      currentUser = null;
-      showSection("login");
-      headerLinks.style.display = "none";
-      status.innerText = "Please login.";
-      return;
-    }
-
-    currentUser = user;
-
-    showSection("feed");
-    headerLinks.style.display = "inline";
-    userEmail.innerText = user.email;
-
-    await loadUsers();
-    await loadVideos();
-    await loadProfile();
-
-  } catch (err) {
-    console.error("Auth state error:", err);
-    showSection("login");
-    status.innerText = "Error loading session. Check console.";
-  }
+onAuthStateChanged(auth, async user => {
+  if(!user){ showSection("login"); headerLinks.style.display="none"; status.innerText="Please login."; return; }
+  currentUser=user;
+  showSection("feed");
+  headerLinks.style.display="inline";
+  userEmail.innerText=user.email;
+  await loadUsers();
+  await loadVideos();
+  await loadProfile();
 });
+
 // SIGNUP/LOGIN/LOGOUT
 document.getElementById('signupBtn').onclick=async ()=>{
   const username=document.getElementById('signupUsername').value.trim();
@@ -492,10 +460,7 @@ document.getElementById("logoutBtn").onclick=async ()=>{ await signOut(auth); sh
 // PROFILE BUTTON
 document.getElementById("myProfileBtn").onclick=()=>loadProfile(true);
 document.getElementById("homeBtn").onclick=()=>{ showSection('feed'); loadVideos(); loadUsers(); };
-document.getElementById("messagesBtn").onclick = () => {
-  showSection("messages");
-  loadMessages();
-};
+
 // SAVE BIO
 document.getElementById('saveBioBtn').onclick=async ()=>{
   const bio=document.getElementById('bio').value.trim();
@@ -506,28 +471,17 @@ document.getElementById('saveBioBtn').onclick=async ()=>{
 
 // LOAD USERS
 async function loadUsers(){
-  try {
-    const snapshot = await getDocs(collection(db,"users"));
-
-    let html = "<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
-
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      html += `
-        <tr onclick="showUserProfile('${doc.id}')">
-          <td>${createAvatar(data.username || "user").outerHTML}</td>
-          <td>${data.username || "Unknown"}</td>
-          <td>${data.bio || ""}</td>
-        </tr>
-      `;
-    });
-
-    html += "</table>";
-    document.getElementById('userList').innerHTML = html;
-
-  } catch (err) {
-    console.error("loadUsers error:", err);
-  }
+  const snapshot=await getDocs(collection(db,"users"));
+  let html="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
+  snapshot.forEach(doc=>{
+    const data=doc.data();
+    html+=`<tr onclick="showUserProfile('${doc.id}')">
+      <td>${createAvatar(data.username).outerHTML}</td>
+      <td>${data.username}</td>
+      <td>${data.bio||""}</td>
+    </tr>`;
+  });
+  html+="</table>"; document.getElementById('userList').innerHTML=html;
 }
 
 // LOAD VIDEOS (24 RANDOM) — using stored thumbnails
@@ -556,6 +510,31 @@ async function loadVideos() {
 
   document.getElementById('homeThumbnails').innerHTML = html;
 }
+// PLAY VIDEO
+window.playVideo = async function(videoId){
+  showSection("player");
+  currentVideoId = videoId;
+  const docSnap = await getDoc(doc(db,"videos",videoId));
+  if(!docSnap.exists()) return;
+  const data = docSnap.data();
+
+  // Increment views
+  const newViews = (data.views || 0) + 1;
+  await updateDoc(doc(db,"videos",videoId), { views: newViews });
+  data.views = newViews;
+
+  document.getElementById('playerTitle').innerText = data.title;
+  const avatarUrl = getAvatarFromUsername(data.user);
+  document.getElementById('playerUploader').innerHTML = `
+    <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
+    <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>
+  `;
+  document.getElementById('playerIframe').src = data.url.replace("/view","/preview");
+  document.getElementById('playerDescription').innerText = data.description || "";
+  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
+  const diffDays = Math.floor((new Date() - createdAt)/(1000*60*60*24));
+  document.getElementById('playerStats').innerText = (data.views||0) + " views • " + (diffDays < 30 ? diffDays + " days ago" : Math.floor(diffDays/30) + " months ago");
+
   // RANDOM 6 VIDEOS SIDEBAR with thumbnails
   const snapshot = await getDocs(collection(db,"videos"));
   const allVid = [];
@@ -584,37 +563,31 @@ async function loadVideos() {
     `;
   });
   document.getElementById('otherVideos').innerHTML = htmlOther;
+};
 // PLAY VIDEO
-window.playVideo = async function(videoId) {
+window.playVideo=async function(videoId){
   showSection("player");
-  currentVideoId = videoId;
-
-  const docSnap = await getDoc(doc(db, "videos", videoId));
-  if (!docSnap.exists()) return;
-
-  const data = docSnap.data();
-
-  const newViews = (data.views || 0) + 1;
-  await updateDoc(doc(db, "videos", videoId), { views: newViews });
-  data.views = newViews;
-
-  document.getElementById('playerTitle').innerText = data.title;
-
+  currentVideoId=videoId;
+  const docSnap=await getDoc(doc(db,"videos",videoId));
+  if(!docSnap.exists()) return;
+  const data=docSnap.data();
+// Increment views
+const newViews = (data.views || 0) + 1;
+await updateDoc(doc(db,"videos",videoId), { views: newViews });
+data.views = newViews;
+  document.getElementById('playerTitle').innerText=data.title;
   const avatarUrl = getAvatarFromUsername(data.user);
 
-  document.getElementById('playerUploader').innerHTML = `
-    <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
-    <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">
-      ${data.user}
-    </span>
-  `;
+document.getElementById('playerUploader').innerHTML=`
+  <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
+  <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>
+`;
+  document.getElementById('playerIframe').src=data.url.replace("/view","/preview");
+  document.getElementById('playerDescription').innerText=data.description||"";
+  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
+  const diffDays = Math.floor((new Date()-createdAt)/(1000*60*60*24));
+  document.getElementById('playerStats').innerText=(data.views||0)+" views • "+(diffDays<30?diffDays+" days ago":Math.floor(diffDays/30)+" months ago");
 
-  document.getElementById('playerIframe').src =
-    data.url.replace("/view", "/preview");
-
-  document.getElementById('playerDescription').innerText =
-    data.description || "";
-};
   // RANDOM 6 VIDEOS SIDEBAR
   const snapshot=await getDocs(collection(db,"videos"));
   const allVid=[];
@@ -724,34 +697,7 @@ document.getElementById('searchInput').addEventListener('input',async ()=>{
   userHtml+="</table>";
   document.getElementById('userList').innerHTML=userHtml;
 });
-/* =========================
-   MESSAGES
-========================= */
 
-document.getElementById("sendMessageBtn").onclick = async () => {
-  try {
-    if (!currentUser) return;
-
-    const toUser = document.getElementById("messageUser").value.trim();
-    const text = document.getElementById("messageText").value.trim();
-
-    if (!toUser || !text) return;
-
-    await addDoc(collection(db, "messages"), {
-      from: currentUser.email,
-      to: toUser,
-      text,
-      createdAt: new Date()
-    });
-
-    document.getElementById("messageText").value = "";
-
-    loadMessages();
-
-  } catch (err) {
-    console.error("Send message error:", err);
-  }
-};
 showSection("login");
 </script>
 <div id="footer" style="margin-top:40px; padding:10px; text-align:center; border-top:1px solid #000; background:#eee;">
