@@ -492,6 +492,10 @@ document.getElementById("logoutBtn").onclick=async ()=>{ await signOut(auth); sh
 // PROFILE BUTTON
 document.getElementById("myProfileBtn").onclick=()=>loadProfile(true);
 document.getElementById("homeBtn").onclick=()=>{ showSection('feed'); loadVideos(); loadUsers(); };
+document.getElementById("messagesBtn").onclick = () => {
+  showSection("messages");
+  loadMessages();
+};
 // SAVE BIO
 document.getElementById('saveBioBtn').onclick=async ()=>{
   const bio=document.getElementById('bio').value.trim();
@@ -716,11 +720,6 @@ document.getElementById('searchInput').addEventListener('input',async ()=>{
 /* =========================
    MESSAGES
 ========================= */
-
-document.getElementById("messagesBtn").onclick = () => {
-  showSection("messages");
-  loadMessages();
-};
 
 document.getElementById("sendMessageBtn").onclick = async () => {
   const toUser = document.getElementById("messageUser").value.trim();
