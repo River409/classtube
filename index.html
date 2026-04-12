@@ -585,29 +585,36 @@ async function loadVideos() {
   });
   document.getElementById('otherVideos').innerHTML = htmlOther;
 // PLAY VIDEO
-window.playVideo=async function(videoId){
+window.playVideo = async function(videoId) {
   showSection("player");
-  currentVideoId=videoId;
-  const docSnap=await getDoc(doc(db,"videos",videoId));
-  if(!docSnap.exists()) return;
-  const data=docSnap.data();
-// Increment views
-const newViews = (data.views || 0) + 1;
-await updateDoc(doc(db,"videos",videoId), { views: newViews });
-data.views = newViews;
-  document.getElementById('playerTitle').innerText=data.title;
+  currentVideoId = videoId;
+
+  const docSnap = await getDoc(doc(db, "videos", videoId));
+  if (!docSnap.exists()) return;
+
+  const data = docSnap.data();
+
+  const newViews = (data.views || 0) + 1;
+  await updateDoc(doc(db, "videos", videoId), { views: newViews });
+  data.views = newViews;
+
+  document.getElementById('playerTitle').innerText = data.title;
+
   const avatarUrl = getAvatarFromUsername(data.user);
 
-document.getElementById('playerUploader').innerHTML=`
-  <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
-  <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>
-`;
-  document.getElementById('playerIframe').src=data.url.replace("/view","/preview");
-  document.getElementById('playerDescription').innerText=data.description||"";
-  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
-  const diffDays = Math.floor((new Date()-createdAt)/(1000*60*60*24));
-  document.getElementById('playerStats').innerText=(data.views||0)+" views • "+(diffDays<30?diffDays+" days ago":Math.floor(diffDays/30)+" months ago");
+  document.getElementById('playerUploader').innerHTML = `
+    <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
+    <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">
+      ${data.user}
+    </span>
+  `;
 
+  document.getElementById('playerIframe').src =
+    data.url.replace("/view", "/preview");
+
+  document.getElementById('playerDescription').innerText =
+    data.description || "";
+};
   // RANDOM 6 VIDEOS SIDEBAR
   const snapshot=await getDocs(collection(db,"videos"));
   const allVid=[];
@@ -722,68 +729,29 @@ document.getElementById('searchInput').addEventListener('input',async ()=>{
 ========================= */
 
 document.getElementById("sendMessageBtn").onclick = async () => {
-  const toUser = document.getElementById("messageUser").value.trim();
-  const text = document.getElementById("messageText").value.trim();
-
-  if (!toUser || !text || !currentUser) return;
-
-  await addDoc(collection(db, "messages"), {
-    from: currentUser.email,   // EMAIL MODE (as you decided)
-    to: toUser,
-    text,
-    createdAt: new Date()
-  });
-
-  document.getElementById("messageText").value = "";
-  loadMessages();
-};
-
-async function loadMessages() {
   try {
-    if (!currentUser || !currentUser.email) return;
+    if (!currentUser) return;
 
-    const snapshot = await getDocs(collection(db, "messages"));
+    const toUser = document.getElementById("messageUser").value.trim();
+    const text = document.getElementById("messageText").value.trim();
 
-    const myEmail = currentUser.email.trim().toLowerCase();
+    if (!toUser || !text) return;
 
-    const messages = [];
-
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      messages.push(data);
+    await addDoc(collection(db, "messages"), {
+      from: currentUser.email,
+      to: toUser,
+      text,
+      createdAt: new Date()
     });
 
-    messages.sort((a, b) => {
-      const aTime = a.createdAt?.seconds || 0;
-      const bTime = b.createdAt?.seconds || 0;
-      return bTime - aTime;
-    });
+    document.getElementById("messageText").value = "";
 
-    let html = "";
-
-    messages.forEach(data => {
-      const to = (data.to || "").trim().toLowerCase();
-      const from = (data.from || "").trim().toLowerCase();
-
-      if (to !== myEmail && from !== myEmail) return;
-
-      html += `
-        <div style="border-bottom:1px solid #ccc;padding:6px">
-          <b>${data.from}</b> → <b>${data.to}</b><br>
-          ${data.text}
-        </div>
-      `;
-    });
-
-    document.getElementById("messageList").innerHTML =
-      html || "<i>No messages yet.</i>";
+    loadMessages();
 
   } catch (err) {
-    console.error("loadMessages error:", err);
-    document.getElementById("messageList").innerHTML =
-      "<span style='color:red;'>Failed to load messages</span>";
+    console.error("Send message error:", err);
   }
-}
+};
 showSection("login");
 </script>
 <div id="footer" style="margin-top:40px; padding:10px; text-align:center; border-top:1px solid #000; background:#eee;">
