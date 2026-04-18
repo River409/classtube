@@ -1,8 +1,14 @@
+
 <!DOCTYPE html>
 <html>
 <head>
 <title>Classtube</title>
 <style>
+
+
+/* =========================
+   AVATAR (GLOBAL)
+========================= */
 .avatar {
     width: 30px;
     height: 30px;
@@ -12,25 +18,29 @@
     background-position: center;
     display: inline-block;
 }
+
+/* =========================
+   HEADER LINKS
+========================= */
 #headerLinks a {
-    font-size: 17px;      /* bigger text */
+    font-size: 17px;
     font-weight: bold;
-    margin-right: 12px;   /* more spacing */
+    margin-right: 12px;
+    color: #0066cc;
+    text-decoration: none;
+    font-size: 13px;
 }
-#watermark {
-    position: absolute;
-    top: 8px;          /* moved to top */
-    left: 10px;        /* moved to left */
-    width: 120px;
-    opacity: 0.75;
-    pointer-events: none;
+
+#headerLinks a:hover {
+    text-decoration: underline;
 }
+
 /* =========================
    GENERAL
 ========================= */
 body {
     margin: 0;
-    font-family:  Verdana, sans-serif;
+    font-family: Verdana, sans-serif;
     background: #f1f1f1;
     color: #333;
 }
@@ -51,16 +61,93 @@ body {
     vertical-align: middle;
 }
 
-/* Header links */
-#headerLinks a {
-    color: #0066cc;
-    text-decoration: none;
-    font-size: 13px;
-    margin-right: 10px;
+/* =========================
+   PROFILE LAYOUT
+========================= */
+#profileSection {
+    background: #fff;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
-#headerLinks a:hover {
-    text-decoration: underline;
+/* top section */
+#profileHeader {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+#profileHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#profileText {
+    display: flex;
+    flex-direction: column;
+}
+
+#profileAvatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 4px;
+    border: 1px solid #888;
+    background-size: cover;
+    background-position: center;
+}
+/* big avatar */
+#profileHeader .avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 4px;
+    border: 1px solid #888;
+    flex-shrink: 0;
+}
+
+/* text container */
+#profileText {
+    display: flex;
+    flex-direction: column;
+}
+
+/* username */
+#profileUsername {
+    font-size: 24px;
+    font-weight: bold;
+    color: #0066cc;
+    margin: 0;
+}
+
+/* bio */
+#profileBio {
+    font-size: 13px;
+    color: #333;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+/* =========================
+   JOIN DATE FIX (IMPORTANT)
+========================= */
+#profileJoinDate {
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+}
+
+/* inject text since span is empty */
+#profileJoinDate::before {
+}
+
+/* =========================
+   VIDEOS TITLE
+========================= */
+#profileVideosTitle {
+    margin-top: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
 }
 
 /* =========================
@@ -91,110 +178,42 @@ input, textarea {
 }
 
 /* =========================
-   VIDEO GRID
-========================= */
-#homeThumbnails {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-#homeThumbnails div {
-    width: 160px;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 4px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-    cursor: pointer;
-}
-
-#homeThumbnails iframe {
-    border-radius: 3px;
-}
-
-/* Titles */
-.videoTitle {
-    font-size: 13px;
-    font-weight: bold;
-    color: #0066cc;
-    margin-top: 4px;
-}
-
-.videoTitle:hover {
-    text-decoration: underline;
-}
-
-/* =========================
-   VIDEO PLAYER
-========================= */
-#videoPlayerWrapper {
-    display: flex;
-    gap: 20px;
-}
-
-#videoPlayerMain iframe {
-    border-radius: 4px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-
-/* Sidebar */
-#otherVideos {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-#otherVideos div {
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    padding: 4px;
-    cursor: pointer;
-}
-
-/* =========================
-   USER TABLE
+   USER LIST (VERTICAL CLEAN)
 ========================= */
 #userList table {
-    width: 100%;
+    border: none;
     border-collapse: collapse;
-    font-size: 14px;
+    width: 100%;
 }
 
 #userList th {
-    background: #eaeaea;
-    border: 1px solid #ccc;
-    padding: 6px;
+    display: none;
+}
+
+#userList tr {
+    display: flex;
+    align-items: center;
+    padding: 4px 0;
+    background: transparent;
 }
 
 #userList td {
-    border: 1px solid #ccc;
-    padding: 8px;
+    border: none;
+    padding: 0;
 }
 
-#userList tr:hover {
-    background: #f5f5f5;
+#userList td:nth-child(n+3) {
+    display: none;
 }
 
-/* =========================
-   PROFILE
-========================= */
-#profileSection {
-    background: #fff;
-    padding: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+#userList td:first-child {
+    margin-right: 8px;
 }
 
-/* =========================
-   SEARCH BAR
-========================= */
-#searchInput {
-    width: 50%;
-    padding: 6px;
-    border: 1px solid #aaa;
-    border-radius: 3px;
+#userList td:nth-child(2) {
+    font-size: 13px;
+    font-weight: bold;
+    color: #0066cc;
 }
 
 /* =========================
@@ -207,15 +226,6 @@ input, textarea {
     background: #e6e6e6;
     border-top: 1px solid #ccc;
     font-size: 12px;
-}
-
-#footer a {
-    color: #0066cc;
-    text-decoration: none;
-}
-
-#footer a:hover {
-    text-decoration: underline;
 }
 .videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
 .videoMeta { color:grey; font-size:12px; margin-bottom:5px; }
@@ -301,9 +311,17 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 
 <!-- PROFILE -->
 <div id="profileSection" style="display:none; padding:20px;">
-Username: <b id="profileUsername"></b><br>
-Join date: <span id="profileJoinDate"></span><br><br>
+<div id="profileHeader">
+  
+  <div class="avatar" id="profileAvatar"></div>
 
+  <div id="profileText">
+    <div id="profileUsername"></div>
+    <div id="profileBio"></div>
+    <div id="profileJoinDate"></div>
+  </div>
+
+</div>
 <div id="bioContainer">
   Bio:<br>
   <textarea id="bio" rows="5" cols="40"></textarea><br>
@@ -619,28 +637,15 @@ document.getElementById('postVideoBtn').onclick=async ()=>{
 };
 
 // SHOW PROFILE BY UID
-window.showUserProfile=async function(uid){
-  showSection('profile');
-  const docSnap=await getDoc(doc(db,"users",uid));
-  if(!docSnap.exists()) return;
-  const data=docSnap.data();
-  document.getElementById('profileUsername').innerText=data.username;
-  const createdAt=data.createdAt.toDate?data.createdAt.toDate():new Date(data.createdAt.seconds*1000);
-  document.getElementById('profileJoinDate').innerText=createdAt.toDateString();
-  if(uid!==currentUser.uid){
-    document.getElementById('bio').readOnly=true;
-    document.getElementById('uploadSection').style.display="none";
-    document.getElementById('saveBioBtn').style.display="none";
-  }else{
-    document.getElementById('bio').readOnly=false;
-    document.getElementById('uploadSection').style.display="block";
-    document.getElementById('saveBioBtn').style.display="inline-block";
-  }
-  document.getElementById('bio').value=data.bio||"";
-  await loadUserVideos(uid); // <-- PASS PROFILE UID
-};
 
-// SHOW PROFILE BY NAME (clickable uploader)
+window.showUserProfile = async function(uid){
+  showSection('profile');
+
+  const docSnap = await getDoc(doc(db,"users",uid));
+  if(!docSnap.exists()) return;
+
+  renderProfileUI(docSnap.data(), uid);
+};// SHOW PROFILE BY NAME (clickable uploader)
 window.showUserProfileByName=async function(username){
   const snapshot=await getDocs(collection(db,"users"));
   snapshot.forEach(doc=>{
@@ -649,34 +654,57 @@ window.showUserProfileByName=async function(username){
 };
 
 // LOAD PROFILE
+
+
 async function loadProfile(fromButton=false){
   if(!currentUser) return;
-  const docSnap=await getDoc(doc(db,"users",currentUser.uid));
+
+  const docSnap = await getDoc(doc(db,"users",currentUser.uid));
   if(!docSnap.exists()) return;
-  document.getElementById('profileUsername').innerText=docSnap.data().username;
-  const createdAt=docSnap.data().createdAt.toDate?docSnap.data().createdAt.toDate():new Date(docSnap.data().createdAt.seconds*1000);
-  document.getElementById('profileJoinDate').innerText=createdAt.toDateString();
-  document.getElementById('bio').value=docSnap.data().bio||"";
-  document.getElementById('bio').readOnly=false;
-  document.getElementById('uploadSection').style.display="block";
-  document.getElementById('saveBioBtn').style.display="inline-block";
+
+  const data = docSnap.data();
+
   if(fromButton) showSection('profile');
+
+  renderProfileUI(data, currentUser.uid);
 }
 
-// LOAD USER VIDEOS BY PROFILE UID
-async function loadUserVideos(profileUid){
-  if(!profileUid) return;
-  const snapshot=await getDocs(collection(db,"videos"));
-  let html="";
-  snapshot.forEach(doc=>{
-    const video=doc.data();
-    if(video.userId===profileUid){
-      html+=`<div class="videoTitle" onclick="playVideo('${doc.id}')">${video.title}</div>`;
-    }
-  });
-  document.getElementById('userVideos').innerHTML=html;
-}
+function renderProfileUI(data, uid){
 
+  // username
+  document.getElementById('profileUsername').innerText = data.username || "";
+
+  // bio (CLEAR first to avoid leftover text)
+  const bioText = data.bio || "";
+  document.getElementById('profileBio').innerText = bioText;
+  document.getElementById('bio').value = bioText;
+
+  // join date
+  const createdAt = data.createdAt?.toDate
+    ? data.createdAt.toDate()
+    : new Date(data.createdAt?.seconds * 1000);
+
+  document.getElementById('profileJoinDate').innerText =
+    "Joined on " + createdAt.toDateString();
+
+  // avatar (CLEAR FIRST — THIS FIXES YOUR BUG)
+  const avatarEl = document.getElementById('profileAvatar');
+
+  if (avatarEl) {
+    avatarEl.style.backgroundImage = "none"; // IMPORTANT RESET
+    avatarEl.style.backgroundImage =
+      `url('${getAvatarFromUsername(data.username || "")}')`;
+  }
+
+  // permissions (ONLY for current user)
+  const isMe = uid === currentUser.uid;
+
+  document.getElementById('bio').readOnly = !isMe;
+  document.getElementById('uploadSection').style.display = isMe ? "block" : "none";
+  document.getElementById('saveBioBtn').style.display = isMe ? "inline-block" : "none";
+
+  loadUserVideos(uid);
+}
 // SEARCH
 document.getElementById('searchInput').addEventListener('input',async ()=>{
   const queryText=document.getElementById('searchInput').value.toLowerCase();
