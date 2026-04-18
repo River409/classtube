@@ -54,11 +54,31 @@ body {
     font-weight: bold;
     margin-bottom: 10px;
 }
+
+/* =========================
+   HOME VIDEO GRID (DEFAULT DESKTOP)
+========================= */
+#homeThumbnails {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* ensure all 24 can show on desktop */
+#homeThumbnails div {
+    width: 160px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    cursor: pointer;
+}
 /* links */
 #headerLinks a {
     font-size: 14px;
     font-weight: 500;
-    color: white;
+    color: blue;
     text-decoration: none;
     margin-right: 10px;
     padding: 6px 10px;
@@ -275,7 +295,25 @@ button:active, input[type="button"]:active {
         transform: translateY(0);
     }
 }
+/* =========================
+   MOBILE LIMIT (ONLY 8 VIDEOS)
+========================= */
+@media (max-width: 768px) {
 
+    #homeThumbnails {
+        justify-content: center;
+    }
+
+    #homeThumbnails div {
+        width: 100%;
+        max-width: 320px;
+    }
+
+    /* show ONLY first 8 videos */
+    #homeThumbnails div:nth-child(n+9) {
+        display: none;
+    }
+}
 /* =========================
    MOBILE (ANDROID DEVICE FEEL)
 ========================= */
