@@ -26,7 +26,9 @@ body {
     background-position: center;
     display: inline-block;
 }
-
+#videoPlayerMain {
+    position: relative;
+}
 /* =========================
    HEADER (MATERIAL TOOLBAR)
 ========================= */
@@ -37,11 +39,21 @@ body {
     padding: 10px 14px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
-
+#playerTitle {
+    color: #000;
+}
 #logoImg {
     height: 48px;
 }
-
+.videoTitle {
+    font-size: 16px; /* bigger for home */
+    font-weight: bold;
+}
+#playerTitle {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
 /* links */
 #headerLinks a {
     font-size: 14px;
@@ -69,7 +81,19 @@ body {
     border-radius: 2px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
-
+.videoTitle {
+    font-size: 16px; /* bigger for home */
+    font-weight: bold;
+}
+#watermark {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    width: 120px;
+    opacity: 0.75;
+    pointer-events: none;
+    z-index: 10;
+}
 /* =========================
    PROFILE (ANDROID CHANNEL STYLE)
 ========================= */
