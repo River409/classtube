@@ -398,44 +398,44 @@ table { border:2px solid #000; background:#eee; }
 
 <!-- LOGIN -->
 <div id="loginSection" style="width:300px; margin:50px auto; background:#DDD; padding:10px; border:1px solid #999;">
-<h2>Login / Sign Up</h2>
+<h2>Iniciar Sesión / Crear Cuenta</h2>
 
-<b>Sign Up</b><br><br>
-Username:<br><input type="text" id="signupUsername"><br><br>
+<b>Crear Una Cuenta</b><br><br>
+Nombre:<br><input type="text" id="signupUsername"><br><br>
 Email:<br><input type="email" id="signupEmail"><br><br>
-Birthdate:<br><input type="date" id="signupBirthdate"><br><br>
-Password:<br><input type="password" id="signupPassword"><br><br>
-<input type="button" value="Create Account" id="signupBtn"><br><br>
+Cumpleaños:<br><input type="date" id="signupBirthdate"><br><br>
+Contraseña:<br><input type="password" id="signupPassword"><br><br>
+<input type="button" value="Crear Cuenta" id="signupBtn"><br><br>
 
-<b>Login</b><br><br>
+<b>Iniciar Sesión</b><br><br>
 Email:<br><input type="email" id="loginEmail"><br><br>
-Password:<br><input type="password" id="loginPassword"><br><br>
-<input type="button" value="Login" id="loginBtn"><br><br>
+Contraseña:<br><input type="password" id="loginPassword"><br><br>
+<input type="button" value="Entrar" id="loginBtn"><br><br>
 
 <span id="status"></span>
 </div>
 
 <!-- FEED -->
 <div id="feedSection" style="display:none; padding:20px;">
-<h3>Welcome, <span id="userEmail"></span></h3>
+<h3>Bienvenido, <span id="userEmail"></span></h3>
 <hr>
 
 <div id="searchContainer" style="margin-bottom:15px;">
-  <input type="text" id="searchInput" placeholder="Search videos or users..." style="width:50%; padding:5px;">
+  <input type="text" id="searchInput" placeholder="Busca videos o usuarips" style="width:50%; padding:5px;">
 </div>
 
 <div class="tabButtons">
   <button id="videosTab">Videos</button>
-  <button id="peopleTab">People</button>
+  <button id="peopleTab">Personas</button>
 </div>
 
 <div id="videosSection">
-  <h3>All Videos:</h3>
+  <h3>Recomendados</h3>
   <div id="homeThumbnails"></div>
 </div>
 
 <div id="peopleSection" style="display:none;">
-  <h3>Users:</h3>
+  <h3>Personas:</h3>
   <div id="userList"></div>
 </div>
 </div>
@@ -454,7 +454,7 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 
 </div>
 <div id="bioContainer">
-  Bio:<br>
+  Bio/Descripción:<br>
   <textarea id="bio" rows="5" cols="40"></textarea><br>
 </div>
 
@@ -465,11 +465,11 @@ Password:<br><input type="password" id="loginPassword"><br><br>
 <div id="userVideos"></div>
 
 <div id="uploadSection">
-Title:<br><input type="text" id="videoTitle"><br>
-Thumbnail (o portada del video) URL (optional):<br>
+Titulo:<br><input type="text" id="videoTitle"><br>
+URL de Portada del Video:<br>
 <input type="text" id="videoThumbnail"><br>
-Description:<br><textarea id="videoDescription" rows="3" cols="40"></textarea><br>
-Video URL:<br><input type="text" id="videoURL"><br>
+Descripcion:<br><textarea id="videoDescription" rows="3" cols="40"></textarea><br>
+URL de google drive de un video:<br><input type="text" id="videoURL"><br>
 <input type="button" value="Post Video" id="postVideoBtn"><br>
 </div>
 </div>
@@ -614,7 +614,7 @@ document.getElementById("homeBtn").onclick=()=>{ showSection('feed'); loadVideos
 document.getElementById('saveBioBtn').onclick=async ()=>{
   const bio=document.getElementById('bio').value.trim();
   if(!currentUser) return;
-  try{ await updateDoc(doc(db,"users",currentUser.uid), { bio }); document.getElementById('profileStatus').innerText="Bio saved!"; }
+  try{ await updateDoc(doc(db,"users",currentUser.uid), { bio }); document.getElementById('profileStatus').innerText="Bio guardada!"; }
   catch(err){ document.getElementById('profileStatus').innerText="Error: "+err.message; }
 };
 
