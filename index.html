@@ -684,7 +684,7 @@ async function loadUsers(){
 
 // LOAD VIDEOS (24 RANDOM) — using stored thumbnails
 async function loadVideos() {
-  const snapshot = await getDocs(collection(db, "videos"));
+  query(collection(db, "videos"), limit(24))
   const allVideos = [];
   snapshot.forEach(doc => allVideos.push({ id: doc.id, data: doc.data() }));
 
