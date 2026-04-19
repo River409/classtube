@@ -882,17 +882,7 @@ window.showUserProfile = async function(uid){
   if(!docSnap.exists()) return;
 
   renderProfileUI(docSnap.data(), uid);
-};// SHOW PROFILE BY NAME (clickable uploader)
-window.showUserProfileByName=async function(username){
-  const snapshot=await getDocs(collection(db,"users"));
-  snapshot.forEach(doc=>{
-    if(doc.data().username===username) showUserProfile(doc.id);
-  });
-};
-
 // LOAD PROFILE
-
-
 async function loadProfile(fromButton=false){
   if(!currentUser) return;
 
