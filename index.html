@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -75,16 +74,6 @@ body {
     cursor: pointer;
 }
 /* links */
-#headerLinks a {
-    font-size: 14px;
-    font-weight: 500;
-    color: blue;
-    text-decoration: none;
-    margin-right: 10px;
-    padding: 6px 10px;
-    border-radius: 2px;
-    transition: background 180ms ease;
-}
 
 #headerLinks a:hover {
     background: rgba(255,255,255,0.15);
@@ -101,9 +90,69 @@ body {
     border-radius: 2px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
-.videoTitle {
-    font-size: 16px; /* bigger for home */
-    font-weight: bold;
+#headerLinks {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* BLOGGER-STYLE BUTTONS */
+#headerLinks a {
+    display: inline-block;
+    padding: 8px 14px;
+
+    background: #4caf50; /* green */
+    color: white;
+    text-decoration: none;
+
+    font-size: 15px;
+    font-weight: standard;
+
+    border: 1px solid #3e8e41;
+    border-radius: 1px;
+
+    box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* hover = slightly darker */
+#headerLinks a:hover {
+    background: #43a047;
+}
+#userVideos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+}
+
+/* each video item */
+#userVideos div {
+    background: #fff;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* hover effect like homepage cards */
+#userVideos div:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* title only */
+#userVideos .videoTitle {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2196f3;
+}
+
+/* click (old-school pressed look) */
+#headerLinks a:active {
+    background: #388e3c;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
 #watermark {
     position: absolute;
@@ -388,9 +437,9 @@ table { border:2px solid #000; background:#eee; }
 <td>
 <img id="logoImg" src="logo.png" style="height:65px;">
 <span id="headerLinks" style="float:right; display:none;">
-<a href="#" id="homeBtn">Home</a> |
-<a href="#" id="myProfileBtn">Profile</a> |
-<a href="#" id="logoutBtn">Logout</a>
+<a href="#" id="homeBtn">Inicio</a> |
+<a href="#" id="myProfileBtn">Perfil</a> |
+<a href="#" id="logoutBtn">Cerrar Sesión</a>
 </span>
 </td>
 </tr>
@@ -470,7 +519,7 @@ URL de Portada del Video:<br>
 <input type="text" id="videoThumbnail"><br>
 Descripcion:<br><textarea id="videoDescription" rows="3" cols="40"></textarea><br>
 URL de google drive de un video:<br><input type="text" id="videoURL"><br>
-<input type="button" value="Post Video" id="postVideoBtn"><br>
+<input type="button" value="Publicar" id="postVideoBtn"><br>
 </div>
 </div>
 
@@ -688,7 +737,7 @@ async function loadUserVideos(profileUid) {
   });
 
   if (count === 0) {
-    html = "<p style='color:gray;'>No videos uploaded yet.</p>";
+    html = "<p style='color:gray;'>No ha subido ningún video todavía</p>";
   }
 
   document.getElementById('userVideos').innerHTML = html;
@@ -849,8 +898,12 @@ function renderProfileUI(data, uid){
     ? data.createdAt.toDate()
     : new Date(data.createdAt?.seconds * 1000);
 
-  document.getElementById('profileJoinDate').innerText =
-    "Joined on " + createdAt.toDateString();
+document.getElementById('profileJoinDate').innerText =
+  "Se unió el " + createdAt.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 
   // avatar (CLEAR FIRST — THIS FIXES YOUR BUG)
   const avatarEl = document.getElementById('profileAvatar');
