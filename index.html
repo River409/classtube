@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,9 +15,7 @@ body {
     color: #212121;
     -webkit-font-smoothing: antialiased;
 }
-.notranslate {
-  unicode-bidi: isolate;
-}
+
 .avatar {
     width: 30px;
     height: 30px;
@@ -301,6 +298,7 @@ button:active, input[type="button"]:active {
     width: 100%;
     border-collapse: collapse;
 }
+
 #userList tr {
     border-bottom: 1px solid #eee;
 }
@@ -366,7 +364,7 @@ button:active, input[type="button"]:active {
     }
 }
 /* =========================
-   MOBILE (FIXED LAYOUT)
+   MOBILE (ANDROID DEVICE FEEL)
 ========================= */
 @media (max-width: 768px) {
 
@@ -396,30 +394,10 @@ button:active, input[type="button"]:active {
         height: 120px;
     }
 
-    /* =========================
-       HOME THUMBNAILS (FIXED)
-       2 PER ROW + 8 TOTAL
-    ========================= */
     #homeThumbnails {
-        display: grid !important;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        padding: 12px;
+        grid-template-columns: 1fr;
     }
 
-    #homeThumbnails div {
-        width: 100%;
-        max-width: none;
-    }
-
-    /* show ONLY first 8 videos (2 columns x 4 rows) */
-    #homeThumbnails div:nth-child(n+9) {
-        display: none;
-    }
-
-    /* =========================
-       PLAYER MOBILE
-    ========================= */
     #videoPlayerWrapper {
         flex-direction: column;
     }
@@ -428,7 +406,6 @@ button:active, input[type="button"]:active {
         width: 100%;
         height: 220px;
     }
-}
 }.videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
 .videoMeta { color:grey; font-size:12px; margin-bottom:5px; }
 #videoPlayerWrapper { display:flex; gap:20px; }
@@ -447,9 +424,9 @@ table { border:2px solid #000; background:#eee; }
 </style>
 </head>
 <body>
+
 <!-- HEADER -->
 <div id="userProfile" style="position:absolute; top:10px; right:15px; display:flex; align-items:center; gap:8px;">
-
 <img id="userAvatar" src="" style="width:34px; height:34px; border-radius:0; border:1px solid #888; display:none;">
 <span id="usernameDisplay" style="font-weight:500;"></span>
 </div>
@@ -463,13 +440,12 @@ table { border:2px solid #000; background:#eee; }
 <a href="#" id="myProfileBtn">Perfil</a> |
 <a href="#" id="logoutBtn">Cerrar Sesión</a>
 </span>
-<div id="google_translate_element"></div>
 </td>
 </tr>
 </table>
 
 <!-- LOGIN -->
-<div id="loginSection" style="width:300px; margin:50px auto; background:#DDD; padding:10px; border:1px solid #999;">
+<div id="loginSection" style="width:380px; margin:50px auto; background:#DDD; padding:10px; border:1px solid #999;">
 <h2>Iniciar Sesión / Crear Cuenta</h2>
 
 <b>Crear Una Cuenta</b><br><br>
@@ -698,7 +674,7 @@ async function loadUsers(){
     const data=doc.data();
     html+=`<tr onclick="showUserProfile('${doc.id}')">
       <td>${createAvatar(data.username).outerHTML}</td>
-      <td><span class="notranslate">${data.username}</span></td>
+      <td>${data.username}</td>
       <td>${data.bio||""}</td>
     </tr>`;
   });
@@ -765,14 +741,6 @@ async function loadUserVideos(profileUid) {
 
   document.getElementById('userVideos').innerHTML = html;
 }
-// PLAY VIDEO
-window.playVideo = async function(videoId){
-  showSection("player");
-  currentVideoId = videoId;
-  const docSnap = await getDoc(doc(db,"videos",videoId));
-  if(!docSnap.exists()) return;
-  const data = docSnap.data();
-
   // Increment views
   const newViews = (data.views || 0) + 1;
   await updateDoc(doc(db,"videos",videoId), { views: newViews });
@@ -804,12 +772,18 @@ window.playVideo = async function(videoId){
 
   let htmlOther = "";
   sel.forEach(v => {
-    let thumbUrl = v.data.url;
-    if(thumbUrl.includes("drive.google.com")){
-      const match = thumbUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-      if(match) thumbUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w140-h80`;
-    }
+let thumbUrl = v.data.thumbnail;
 
+if (!thumbUrl && v.data.url.includes("drive.google.com")) {
+  const match = v.data.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (match) {
+    thumbUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w140-h80`;
+  }
+}
+
+if (!thumbUrl) {
+  thumbUrl = "https://via.placeholder.com/140x80?text=Video";
+}
     htmlOther += `
       <div onclick="playVideo('${v.id}')">
         <div>${v.data.title}</div>
@@ -882,7 +856,17 @@ window.showUserProfile = async function(uid){
   if(!docSnap.exists()) return;
 
   renderProfileUI(docSnap.data(), uid);
+};// SHOW PROFILE BY NAME (clickable uploader)
+window.showUserProfileByName=async function(username){
+  const snapshot=await getDocs(collection(db,"users"));
+  snapshot.forEach(doc=>{
+    if(doc.data().username===username) showUserProfile(doc.id);
+  });
+};
+
 // LOAD PROFILE
+
+
 async function loadProfile(fromButton=false){
   if(!currentUser) return;
 
@@ -951,7 +935,7 @@ document.getElementById('searchInput').addEventListener('input',async ()=>{
   let userHtml="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
   usersSnap.forEach(doc=>{
     const data=doc.data();
-    if(data.username.toLowerCase().includes(queryText)) userHtml+=`<tr onclick="showUserProfile('${doc.id}')"><td>${createAvatar(data.username).outerHTML}</td><td><span class="notranslate">${data.username}</span></td><td>${data.bio||""}</td></tr>`;
+    if(data.username.toLowerCase().includes(queryText)) userHtml+=`<tr onclick="showUserProfile('${doc.id}')"><td>${createAvatar(data.username).outerHTML}</td><td>${data.username}</td><td>${data.bio||""}</td></tr>`;
   });
   userHtml+="</table>";
   document.getElementById('userList').innerHTML=userHtml;
@@ -963,21 +947,5 @@ showSection("login");
   <a href="http://github.com/River409/classtube/blob/main/Markdown/legal.md">Legal</a> |
   ©2026 ClassTube
 </div>
-<script type="text/javascript">
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement(
-    {
-      pageLanguage: 'en',
-      includedLanguages: 'en,es,fr,de,it,pt,ru,ar,zh-CN,ja,ko,hi,tr,nl,sv,pl,uk,he',
-      autoDisplay: false,
-      layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-    },
-    'google_translate_element'
-  );
-}
-</script>
-
-<script type="text/javascript"
-src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
