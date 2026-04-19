@@ -364,7 +364,7 @@ button:active, input[type="button"]:active {
     }
 }
 /* =========================
-   MOBILE (ANDROID DEVICE FEEL)
+   MOBILE (FIXED LAYOUT)
 ========================= */
 @media (max-width: 768px) {
 
@@ -394,10 +394,30 @@ button:active, input[type="button"]:active {
         height: 120px;
     }
 
+    /* =========================
+       HOME THUMBNAILS (FIXED)
+       2 PER ROW + 8 TOTAL
+    ========================= */
     #homeThumbnails {
-        grid-template-columns: 1fr;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 12px;
     }
 
+    #homeThumbnails div {
+        width: 100%;
+        max-width: none;
+    }
+
+    /* show ONLY first 8 videos (2 columns x 4 rows) */
+    #homeThumbnails div:nth-child(n+9) {
+        display: none;
+    }
+
+    /* =========================
+       PLAYER MOBILE
+    ========================= */
     #videoPlayerWrapper {
         flex-direction: column;
     }
