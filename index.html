@@ -951,7 +951,13 @@ document.getElementById('searchInput').addEventListener('input',async ()=>{
     if (data.title.toLowerCase().includes(queryText)) {
   html += renderVideoCard(doc.id, data);
 }
-iframe><div class="videoTitle">${data.title}</div></div>`;
+html += `
+  <div onclick="playVideo('${doc.id}')">
+    <iframe src="${data.url.replace('/view','/preview')}" 
+            width="160" height="90" frameborder="0"></iframe>
+    <div class="videoTitle">${data.title}</div>
+  </div>
+`;
   });
   document.getElementById('homeThumbnails').innerHTML=html;
 
