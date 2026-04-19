@@ -705,15 +705,21 @@ async function loadVideos() {
   allVideos.forEach(v => {
     const thumb = v.data.thumbnail || "https://via.placeholder.com/160x90.png?text=Video";
 
-    html += `
-      <div onclick="playVideo('${v.id}')">
-        <img src="${thumb}" width="160" height="90" style="object-fit:cover; border:1px solid #000;">
-        <div class="videoTitle">${v.data.title}</div>
-      </div>
-    `;
+    html += renderVideoCard(v.id, v.data);
   });
 
   document.getElementById('homeThumbnails').innerHTML = html;
+}
+function renderVideoCard(id, data) {
+  const thumb = data.thumbnail || "https://placehold.co/160x90?text=Video";
+
+  return `
+    <div onclick="playVideo('${id}')">
+      <img src="${thumb}" width="160" height="90"
+           style="object-fit:cover; border:1px solid #000;">
+      <div class="videoTitle">${data.title}</div>
+    </div>
+  `;
 }
 // LOAD USER VIDEOS
 
@@ -932,12 +938,20 @@ document.getElementById('profileJoinDate').innerText =
 }
 // SEARCH
 document.getElementById('searchInput').addEventListener('input',async ()=>{
+   if (!queryText) {
+  loadVideos();
+  loadUsers();
+  return;
+}
   const queryText=document.getElementById('searchInput').value.toLowerCase();
   const videosSnap=await getDocs(collection(db,"videos"));
   let html="";
   videosSnap.forEach(doc=>{
     const data=doc.data();
-    if(data.title.toLowerCase().includes(queryText)) html+=`<div onclick="playVideo('${doc.id}')"><iframe src="${data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe><div class="videoTitle">${data.title}</div></div>`;
+    if (data.title.toLowerCase().includes(queryText)) {
+  html += renderVideoCard(doc.id, data);
+}
+iframe><div class="videoTitle">${data.title}</div></div>`;
   });
   document.getElementById('homeThumbnails').innerHTML=html;
 
