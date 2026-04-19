@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,7 +16,9 @@ body {
     color: #212121;
     -webkit-font-smoothing: antialiased;
 }
-
+.notranslate {
+  unicode-bidi: isolate;
+}
 .avatar {
     width: 30px;
     height: 30px;
@@ -298,7 +301,6 @@ button:active, input[type="button"]:active {
     width: 100%;
     border-collapse: collapse;
 }
-
 #userList tr {
     border-bottom: 1px solid #eee;
 }
@@ -445,9 +447,9 @@ table { border:2px solid #000; background:#eee; }
 </style>
 </head>
 <body>
-
 <!-- HEADER -->
 <div id="userProfile" style="position:absolute; top:10px; right:15px; display:flex; align-items:center; gap:8px;">
+
 <img id="userAvatar" src="" style="width:34px; height:34px; border-radius:0; border:1px solid #888; display:none;">
 <span id="usernameDisplay" style="font-weight:500;"></span>
 </div>
@@ -461,6 +463,7 @@ table { border:2px solid #000; background:#eee; }
 <a href="#" id="myProfileBtn">Perfil</a> |
 <a href="#" id="logoutBtn">Cerrar Sesión</a>
 </span>
+<div id="google_translate_element"></div>
 </td>
 </tr>
 </table>
@@ -695,7 +698,7 @@ async function loadUsers(){
     const data=doc.data();
     html+=`<tr onclick="showUserProfile('${doc.id}')">
       <td>${createAvatar(data.username).outerHTML}</td>
-      <td>${data.username}</td>
+      <td><span class="notranslate">${data.username}</span></td>
       <td>${data.bio||""}</td>
     </tr>`;
   });
@@ -958,7 +961,7 @@ document.getElementById('searchInput').addEventListener('input',async ()=>{
   let userHtml="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
   usersSnap.forEach(doc=>{
     const data=doc.data();
-    if(data.username.toLowerCase().includes(queryText)) userHtml+=`<tr onclick="showUserProfile('${doc.id}')"><td>${createAvatar(data.username).outerHTML}</td><td>${data.username}</td><td>${data.bio||""}</td></tr>`;
+    if(data.username.toLowerCase().includes(queryText)) userHtml+=`<tr onclick="showUserProfile('${doc.id}')"><td>${createAvatar(data.username).outerHTML}</td><td><span class="notranslate">${data.username}</span></td><td>${data.bio||""}</td></tr>`;
   });
   userHtml+="</table>";
   document.getElementById('userList').innerHTML=userHtml;
@@ -970,5 +973,21 @@ showSection("login");
   <a href="http://github.com/River409/classtube/blob/main/Markdown/legal.md">Legal</a> |
   ©2026 ClassTube
 </div>
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement(
+    {
+      pageLanguage: 'en',
+      includedLanguages: 'en,es,fr,de,it,pt,ru,ar,zh-CN,ja,ko,hi,tr,nl,sv,pl,uk,he',
+      autoDisplay: false,
+      layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+    },
+    'google_translate_element'
+  );
+}
+</script>
+
+<script type="text/javascript"
+src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
