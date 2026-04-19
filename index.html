@@ -543,10 +543,8 @@ URL de google drive de un video:<br><input type="text" id="videoURL"><br>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { 
-  getFirestore, doc, setDoc, collection, getDocs, addDoc, 
-  query, orderBy, getDoc, updateDoc, limit 
-} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
 const firebaseConfig = {
   apiKey:"AIzaSyC2QdW6Gq3dnFf2JL4-vET-68M6LvTJUvw",
   authDomain:"classtube2-1436a.firebaseapp.com",
@@ -683,43 +681,32 @@ async function loadUsers(){
   });
   html+="</table>"; document.getElementById('userList').innerHTML=html;
 }
-// SAFE DRIVE URL CONVERTER
-function toPreviewUrl(url) {
-  if (!url) return "";
 
-  if (url.includes("/preview")) return url;
-  if (url.includes("/view")) return url.replace("/view", "/preview");
-
-  return url;
-}
 // LOAD VIDEOS (24 RANDOM) — using stored thumbnails
 async function loadVideos() {
-  const q = query(collection(db, "videos"), limit(24));
-  const snapshot = await getDocs(q);
-
+  const snapshot = await getDocs(collection(db, "videos"));
   const allVideos = [];
   snapshot.forEach(doc => allVideos.push({ id: doc.id, data: doc.data() }));
 
+  const selected = [];
+  while (selected.length < 24 && allVideos.length > 0) {
+    const idx = Math.floor(Math.random() * allVideos.length);
+    selected.push(allVideos[idx]);
+    allVideos.splice(idx, 1);
+  }
+
   let html = "";
-
-  allVideos.forEach(v => {
-    const thumb = v.data.thumbnail || "https://via.placeholder.com/160x90.png?text=Video";
-
-    html += renderVideoCard(v.id, v.data);
+  selected.forEach(v => {
+    const thumb = v.data.thumbnail || "https://via.placeholder.com/160x90.png?text=Video"; // fallback
+    html += `
+      <div onclick="playVideo('${v.id}')">
+        <img src="${thumb}" width="160" height="90" style="object-fit:cover; border:1px solid #000;">
+        <div class="videoTitle">${v.data.title}</div>
+      </div>
+    `;
   });
 
   document.getElementById('homeThumbnails').innerHTML = html;
-}
-function renderVideoCard(id, data) {
-  const thumb = data.thumbnail || "https://placehold.co/160x90?text=Video";
-
-  return `
-    <div onclick="playVideo('${id}')">
-      <img src="${thumb}" width="160" height="90"
-           style="object-fit:cover; border:1px solid #000;">
-      <div class="videoTitle">${data.title}</div>
-    </div>
-  `;
 }
 // LOAD USER VIDEOS
 
@@ -731,24 +718,14 @@ async function loadUserVideos(profileUid) {
   let html = "";
   let count = 0;
 
-snapshot.forEach(docSnap => {
-  const video = docSnap.data();
+  snapshot.forEach(docSnap => {
+    const video = docSnap.data();
 
-  if (video.userId === profileUid) {
-    const thumb = video.thumbnail || "https://placehold.co/160x90?text=...";
-
-    html += `
-      <div onclick="playVideo('${docSnap.id}')">
-        <div class="videoTitle">${video.title || "Untitled"}</div>
-      </div>
-    `;
-  }
-});
     // SAFE CHECK
     if (video.userId === profileUid) {
       count++;
 
-      const thumb = v.data.thumbnail || "https://placehold.co/160x90?text=Video";
+      const thumb = video.thumbnail || "https://via.placeholder.com/160x90.png?text=Video";
 
       html += `
         <div onclick="playVideo('${docSnap.id}')" style="margin-bottom:10px; cursor:pointer;">
@@ -784,7 +761,7 @@ window.playVideo = async function(videoId){
     <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
     <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>
   `;
-  toPreviewUrl(data.url);
+  document.getElementById('playerIframe').src = data.url.replace("/view","/preview");
   document.getElementById('playerDescription').innerText = data.description || "";
   const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
   const diffDays = Math.floor((new Date() - createdAt)/(1000*60*60*24));
@@ -947,44 +924,13 @@ document.getElementById('profileJoinDate').innerText =
   loadUserVideos(uid);
 }
 // SEARCH
-document.getElementById('searchInput').addEventListener('input', async () => {
-
-  const queryText = document.getElementById('searchInput').value.toLowerCase();
-
-  if (!queryText) {
-    loadVideos();
-    loadUsers();
-    return;
-  }
-
-  const videosSnap = await getDocs(collection(db, "videos"));
-  let html = "";
-
-  videosSnap.forEach(doc => {
-    const data = doc.data();
-
-    if (data.title.toLowerCase().includes(queryText)) {
-      html += renderVideoCard(doc.id, data);
-    }
-  });
-
-  document.getElementById('homeThumbnails').innerHTML = html;
-});
+document.getElementById('searchInput').addEventListener('input',async ()=>{
   const queryText=document.getElementById('searchInput').value.toLowerCase();
   const videosSnap=await getDocs(collection(db,"videos"));
   let html="";
   videosSnap.forEach(doc=>{
     const data=doc.data();
-    if (data.title.toLowerCase().includes(queryText)) {
-  html += renderVideoCard(doc.id, data);
-}
-html += `
-  <div onclick="playVideo('${doc.id}')">
-    <iframe src="${data.url.replace('/view','/preview')}" 
-            width="160" height="90" frameborder="0"></iframe>
-    <div class="videoTitle">${data.title}</div>
-  </div>
-`;
+    if(data.title.toLowerCase().includes(queryText)) html+=`<div onclick="playVideo('${doc.id}')"><iframe src="${data.url.replace("/view","/preview")}" frameborder="0" width="160" height="90"></iframe><div class="videoTitle">${data.title}</div></div>`;
   });
   document.getElementById('homeThumbnails').innerHTML=html;
 
