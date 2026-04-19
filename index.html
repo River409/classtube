@@ -731,9 +731,19 @@ async function loadUserVideos(profileUid) {
   let html = "";
   let count = 0;
 
-  snapshot.forEach(docSnap => {
-    const video = docSnap.data();
+snapshot.forEach(docSnap => {
+  const video = docSnap.data();
 
+  if (video.userId === profileUid) {
+    const thumb = video.thumbnail || "https://placehold.co/160x90?text=...";
+
+    html += `
+      <div onclick="playVideo('${docSnap.id}')">
+        <div class="videoTitle">${video.title || "Untitled"}</div>
+      </div>
+    `;
+  }
+});
     // SAFE CHECK
     if (video.userId === profileUid) {
       count++;
@@ -937,12 +947,29 @@ document.getElementById('profileJoinDate').innerText =
   loadUserVideos(uid);
 }
 // SEARCH
-document.getElementById('searchInput').addEventListener('input',async ()=>{
-   if (!queryText) {
-  loadVideos();
-  loadUsers();
-  return;
-}
+document.getElementById('searchInput').addEventListener('input', async () => {
+
+  const queryText = document.getElementById('searchInput').value.toLowerCase();
+
+  if (!queryText) {
+    loadVideos();
+    loadUsers();
+    return;
+  }
+
+  const videosSnap = await getDocs(collection(db, "videos"));
+  let html = "";
+
+  videosSnap.forEach(doc => {
+    const data = doc.data();
+
+    if (data.title.toLowerCase().includes(queryText)) {
+      html += renderVideoCard(doc.id, data);
+    }
+  });
+
+  document.getElementById('homeThumbnails').innerHTML = html;
+});
   const queryText=document.getElementById('searchInput').value.toLowerCase();
   const videosSnap=await getDocs(collection(db,"videos"));
   let html="";
