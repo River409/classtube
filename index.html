@@ -406,6 +406,7 @@ button:active, input[type="button"]:active {
         width: 100%;
         height: 220px;
     }
+}
 }.videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
 .videoMeta { color:grey; font-size:12px; margin-bottom:5px; }
 #videoPlayerWrapper { display:flex; gap:20px; }
@@ -445,7 +446,7 @@ table { border:2px solid #000; background:#eee; }
 </table>
 
 <!-- LOGIN -->
-<div id="loginSection" style="width:380px; margin:50px auto; background:#DDD; padding:10px; border:1px solid #999;">
+<div id="loginSection" style="width:300px; margin:50px auto; background:#DDD; padding:10px; border:1px solid #999;">
 <h2>Iniciar Sesión / Crear Cuenta</h2>
 
 <b>Crear Una Cuenta</b><br><br>
@@ -741,6 +742,14 @@ async function loadUserVideos(profileUid) {
 
   document.getElementById('userVideos').innerHTML = html;
 }
+// PLAY VIDEO
+window.playVideo = async function(videoId){
+  showSection("player");
+  currentVideoId = videoId;
+  const docSnap = await getDoc(doc(db,"videos",videoId));
+  if(!docSnap.exists()) return;
+  const data = docSnap.data();
+
   // Increment views
   const newViews = (data.views || 0) + 1;
   await updateDoc(doc(db,"videos",videoId), { views: newViews });
@@ -772,18 +781,12 @@ async function loadUserVideos(profileUid) {
 
   let htmlOther = "";
   sel.forEach(v => {
-let thumbUrl = v.data.thumbnail;
+    let thumbUrl = v.data.url;
+    if(thumbUrl.includes("drive.google.com")){
+      const match = thumbUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if(match) thumbUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w140-h80`;
+    }
 
-if (!thumbUrl && v.data.url.includes("drive.google.com")) {
-  const match = v.data.url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (match) {
-    thumbUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w140-h80`;
-  }
-}
-
-if (!thumbUrl) {
-  thumbUrl = "https://via.placeholder.com/140x80?text=Video";
-}
     htmlOther += `
       <div onclick="playVideo('${v.id}')">
         <div>${v.data.title}</div>
