@@ -184,20 +184,20 @@ body {
 
 /* username strong */
 #profileUsername {
-    font-size: 24px;
+    font-size: 28px;
     font-weight: 500;
     color: #212121;
 }
 
 /* bio */
 #profileBio {
-    font-size: 14px;
+    font-size: 16px;
     color: #616161;
 }
 
 /* join date */
 #profileJoinDate {
-    font-size: 12px;
+    font-size: 14px;
     color: #9e9e9e;
 }
 
@@ -488,16 +488,9 @@ Contraseña:<br><input type="password" id="loginPassword"><br><br>
 <div id="feedSection" style="display:none; padding:20px;">
 <h3>Bienvenido, <span id="userEmail"></span></h3>
 <hr>
-<div style="margin:10px 0; padding:10px; background:#fff; border:1px solid #ccc;">
-  <h4>Download App</h4>
-  <a href="_Classtube_197495.apk" download>
-    <button>Download (4.00 KB)</button>
-  </a>
-</div>
 <div id="searchContainer" style="margin-bottom:15px;">
   <input type="text" id="searchInput" placeholder="Busca videos o usuarios" style="width:50%; padding:5px;">
 </div>
-
 <div class="tabButtons">
   <button id="videosTab">Videos</button>
   <button id="peopleTab">Personas</button>
@@ -527,12 +520,12 @@ Contraseña:<br><input type="password" id="loginPassword"><br><br>
   </div>
 
 </div>
-<div id="bioContainer">
+<div id="bioContainer" style="display:none;">
   Bio/Descripción:<br>
   <textarea id="bio" rows="5" cols="40"></textarea><br>
 </div>
 
-<input type="button" value="Guardar Bio" id="saveBioBtn"><br>
+<input type="button" value="Guardar Bio" id="saveBioBtn" style="display:none;"><br>
 <div id="profileStatus"></div><br><br>
 
 <h3>Videos</h3>
@@ -561,8 +554,8 @@ URL de google drive de un video:<br><input type="text" id="videoURL"><br>
 <div id="playerStats" class="videoMeta"></div>
 
 <div id="likeBar" style="margin:10px 0;">
-  <button id="likeBtn">👍 Like</button>
-  <button id="dislikeBtn">👎 Dislike</button>
+  <button id="likeBtn">👍 Me gusta</button>
+  <button id="dislikeBtn">👎 No me gusta</button>
   <span id="likeCount" style="margin-left:10px;"></span>
 </div>
 <div id="playerDescription" style="margin:10px 0; font-style:italic;"></div>
@@ -935,11 +928,12 @@ document.getElementById('profileJoinDate').innerText =
   }
 
   // permissions (ONLY for current user)
-  const isMe = uid === currentUser.uid;
+const isMe = uid === currentUser.uid;
 
-  document.getElementById('bio').readOnly = !isMe;
-  document.getElementById('uploadSection').style.display = isMe ? "block" : "none";
-  document.getElementById('saveBioBtn').style.display = isMe ? "inline-block" : "none";
+document.getElementById('bioContainer').style.display = isMe ? "block" : "none";
+document.getElementById('saveBioBtn').style.display = isMe ? "inline-block" : "none";
+document.getElementById('bio').readOnly = !isMe;
+document.getElementById('uploadSection').style.display = isMe ? "block" : "none";
 
   loadUserVideos(uid);
 }
@@ -1016,8 +1010,8 @@ function updateLikeUI(likes, dislikes, userVote){
   const dislikeBtn = document.getElementById('dislikeBtn');
 
   // reset
-  likeBtn.style.background = "#2196f3";
-  dislikeBtn.style.background = "#2196f3";
+  likeBtn.style.background = "#4caf50";   // green
+  dislikeBtn.style.background = "#f44336"; // red
 
   if (userVote === "like") likeBtn.style.background = "#4caf50";
   if (userVote === "dislike") dislikeBtn.style.background = "#f44336";
