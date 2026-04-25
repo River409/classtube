@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -393,7 +394,30 @@ button:active, input[type="button"]:active {
         width: 120px;
         height: 120px;
     }
+/* USER LIST (no boxes, clean row style) */
+#userList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+}
 
+.userRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.userRow:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+.userName {
+    font-size: 16px;
+    font-weight: 500;
+    color: #2196f3;
+}
     /* =========================
        HOME THUMBNAILS (FIXED)
        2 PER ROW + 8 TOTAL
@@ -694,16 +718,20 @@ document.getElementById('saveBioBtn').onclick=async ()=>{
 // LOAD USERS
 async function loadUsers(){
   const snapshot=await getDocs(collection(db,"users"));
-  let html="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
-  snapshot.forEach(doc=>{
-    const data=doc.data();
-    html+=`<tr onclick="showUserProfile('${doc.id}')">
-      <td>${createAvatar(data.username).outerHTML}</td>
-      <td>${data.username}</td>
-      <td>${data.bio||""}</td>
-    </tr>`;
-  });
-  html+="</table>"; document.getElementById('userList').innerHTML=html;
+let html = "";
+
+snapshot.forEach(doc => {
+  const data = doc.data();
+
+  html += `
+    <div class="userRow" onclick="showUserProfile('${doc.id}')">
+      ${createAvatar(data.username).outerHTML}
+      <span class="userName">${data.username}</span>
+    </div>
+  `;
+});
+
+document.getElementById('userList').innerHTML = html;
 }
 
 // LOAD VIDEOS (24 RANDOM) — using stored thumbnails
@@ -938,34 +966,51 @@ document.getElementById('uploadSection').style.display = isMe ? "block" : "none"
   loadUserVideos(uid);
 }
 // SEARCH
-document.getElementById('searchInput').addEventListener('input',async ()=>{
-  const queryText=document.getElementById('searchInput').value.toLowerCase();
-  const videosSnap=await getDocs(collection(db,"videos"));
-  let html="";
-  videosSnap.forEach(doc=>{
-    const data=doc.data();
-if (data.title.toLowerCase().includes(queryText)) {
-  const thumb = data.thumbnail || "https://via.placeholder.com/160x90.png?text=Video";
+document.getElementById('searchInput').addEventListener('input', async () => {
+  const queryText = document.getElementById('searchInput').value.toLowerCase();
 
-  html += `
-    <div onclick="playVideo('${doc.id}')">
-      <img src="${thumb}" width="160" height="90"
-        style="object-fit:cover; border:1px solid #000;">
-      <div class="videoTitle">${data.title}</div>
-    </div>
-  `;
-}
-  });
-  document.getElementById('homeThumbnails').innerHTML=html;
+  // ===== VIDEOS =====
+  const videosSnap = await getDocs(collection(db, "videos"));
+  let videoHtml = "";
 
-  const usersSnap=await getDocs(collection(db,"users"));
-  let userHtml="<table border='1' cellpadding='5'><tr><th>Avatar</th><th>Username</th><th>Bio</th></tr>";
-  usersSnap.forEach(doc=>{
-    const data=doc.data();
-    if(data.username.toLowerCase().includes(queryText)) userHtml+=`<tr onclick="showUserProfile('${doc.id}')"><td>${createAvatar(data.username).outerHTML}</td><td>${data.username}</td><td>${data.bio||""}</td></tr>`;
+  videosSnap.forEach(doc => {
+    const data = doc.data();
+
+    if (data.title.toLowerCase().includes(queryText)) {
+      const thumb = data.thumbnail || "https://via.placeholder.com/160x90.png?text=Video";
+
+      videoHtml += `
+        <div onclick="playVideo('${doc.id}')">
+          <img src="${thumb}" width="160" height="90"
+            style="object-fit:cover; border:1px solid #000;">
+          <div class="videoTitle">${data.title}</div>
+        </div>
+      `;
+    }
   });
-  userHtml+="</table>";
-  document.getElementById('userList').innerHTML=userHtml;
+
+  document.getElementById('homeThumbnails').innerHTML = videoHtml;
+
+  // ===== USERS (FIXED — NO TABLE) =====
+  const usersSnap = await getDocs(collection(db, "users"));
+  let userHtml = "";
+
+  usersSnap.forEach(doc => {
+    const data = doc.data();
+    const username = (data.username || "User").toLowerCase();
+
+    if (username.includes(queryText)) {
+      userHtml += `
+        <div class="userRow" onclick="showUserProfile('${doc.id}')">
+          ${createAvatar(data.username || "User").outerHTML}
+          <span class="userName">${data.username || "User"}</span>
+        </div>
+      `;
+    }
+  });
+
+  // 🔑 THIS LINE fixes your "everything merging together" bug
+  document.getElementById('userList').innerHTML = userHtml;
 });
 async function handleVote(type){
   if (!currentUser || !currentVideoId) return;
