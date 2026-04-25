@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -559,6 +560,12 @@ URL de google drive de un video:<br><input type="text" id="videoURL"><br>
   <img id="watermark" src="watermark.png">
 </div>
 <div id="playerStats" class="videoMeta"></div>
+
+<div id="likeBar" style="margin:10px 0;">
+  <button id="likeBtn">👍 Like</button>
+  <button id="dislikeBtn">👎 Dislike</button>
+  <span id="likeCount" style="margin-left:10px;"></span>
+</div>
 <div id="playerDescription" style="margin:10px 0; font-style:italic;"></div>
 </div>
 <div id="otherVideos"></div>
@@ -771,36 +778,48 @@ async function loadUserVideos(profileUid) {
 window.playVideo = async function(videoId){
   showSection("player");
   currentVideoId = videoId;
-  const docSnap = await getDoc(doc(db,"videos",videoId));
+
+  const ref = doc(db,"videos",videoId);
+  const docSnap = await getDoc(ref);
   if(!docSnap.exists()) return;
+
   const data = docSnap.data();
 
-  // Increment views
+  // increment views
   const newViews = (data.views || 0) + 1;
-  await updateDoc(doc(db,"videos",videoId), { views: newViews });
+  await updateDoc(ref, { views: newViews });
   data.views = newViews;
 
+  // UI
   document.getElementById('playerTitle').innerText = data.title;
+
   const avatarUrl = getAvatarFromUsername(data.user);
   document.getElementById('playerUploader').innerHTML = `
     <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
     <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>
   `;
+
   document.getElementById('playerIframe').src = data.url.replace("/view","/preview");
   document.getElementById('playerDescription').innerText = data.description || "";
+
+  // time
   const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
   const diffDays = Math.floor((new Date() - createdAt)/(1000*60*60*24));
+
   const timeText =
-  diffDays < 30
-    ? "hace " + diffDays + " día" + (diffDays === 1 ? "" : "s")
-    : diffDays < 365
-    ? "hace " + Math.floor(diffDays / 30) + " mes" + (Math.floor(diffDays / 30) === 1 ? "" : "es")
-    : "hace " + Math.floor(diffDays / 365) + " año" + (Math.floor(diffDays / 365) === 1 ? "" : "s");
+    diffDays < 30 ? `hace ${diffDays} día${diffDays===1?"":"s"}`
+    : diffDays < 365 ? `hace ${Math.floor(diffDays/30)} mes${Math.floor(diffDays/30)===1?"":"es"}`
+    : `hace ${Math.floor(diffDays/365)} año${Math.floor(diffDays/365)===1?"":"s"}`;
 
-document.getElementById('playerStats').innerText =
-  (data.views || 0) + " vistas • " + timeText;
+  document.getElementById('playerStats').innerText =
+    `${data.views || 0} vistas • ${timeText}`;
+  const likes = data.likes || 0;
+  const dislikes = data.dislikes || 0;
+  const votes = data.votes || {};
+  const userVote = currentUser ? votes[currentUser.uid] : null;
 
-  // RANDOM 6 VIDEOS SIDEBAR with thumbnails
+updateLikeUI(likes, dislikes, userVote);
+  // sidebar videos (UNCHANGED)
   const snapshot = await getDocs(collection(db,"videos"));
   const allVid = [];
   snapshot.forEach(d => { if(d.id !== videoId) allVid.push({id: d.id, data: d.data()}); });
@@ -814,70 +833,34 @@ document.getElementById('playerStats').innerText =
 
   let htmlOther = "";
   sel.forEach(v => {
-    let thumbUrl = v.data.url;
-    if(thumbUrl.includes("drive.google.com")){
-      const match = thumbUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-      if(match) thumbUrl = `https://drive.google.com/thumbnail?id=${match[1]}&sz=w140-h80`;
-    }
-
     htmlOther += `
       <div onclick="playVideo('${v.id}')">
         <div>${v.data.title}</div>
-        <img src="${thumbUrl}" width="140" height="80" style="border:1px solid #000; border-radius:3px;">
+        <iframe width="140" height="80" src="${v.data.url.replace("/view","/preview")}" frameborder="0"></iframe>
       </div>
     `;
   });
+
   document.getElementById('otherVideos').innerHTML = htmlOther;
 };
-// PLAY VIDEO
-window.playVideo=async function(videoId){
-  showSection("player");
-  currentVideoId=videoId;
-  const docSnap=await getDoc(doc(db,"videos",videoId));
-  if(!docSnap.exists()) return;
-  const data=docSnap.data();
-// Increment views
-const newViews = (data.views || 0) + 1;
-await updateDoc(doc(db,"videos",videoId), { views: newViews });
-data.views = newViews;
-  document.getElementById('playerTitle').innerText=data.title;
-  const avatarUrl = getAvatarFromUsername(data.user);
-
-document.getElementById('playerUploader').innerHTML=`
-  <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
-  <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>
-`;
-  document.getElementById('playerIframe').src=data.url.replace("/view","/preview");
-  document.getElementById('playerDescription').innerText=data.description||"";
-  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
-  const diffDays = Math.floor((new Date()-createdAt)/(1000*60*60*24));
-  document.getElementById('playerStats').innerText=(data.views||0)+" views • "+(diffDays<30?diffDays+" days ago":Math.floor(diffDays/30)+" months ago");
-
-  // RANDOM 6 VIDEOS SIDEBAR
-  const snapshot=await getDocs(collection(db,"videos"));
-  const allVid=[];
-  snapshot.forEach(d=>{ if(d.id!==videoId) allVid.push({id:d.id,data:d.data()}); });
-  const sel=[];
-  while(sel.length<6 && allVid.length>0){
-    const idx=Math.floor(Math.random()*allVid.length);
-    sel.push(allVid[idx]);
-    allVid.splice(idx,1);
-  }
-  let htmlOther="";
-  sel.forEach(v=>{
-    htmlOther+=`<div onclick="playVideo('${v.id}')"><div>${v.data.title}</div><iframe width="140" height="80" src="${v.data.url.replace("/view","/preview")}" frameborder="0"></iframe></div>`;
-  });
-  document.getElementById('otherVideos').innerHTML=htmlOther;
-};
-
 // UPLOAD VIDEO
 document.getElementById('postVideoBtn').onclick=async ()=>{
   const title=document.getElementById('videoTitle').value.trim();
   const url=document.getElementById('videoURL').value.trim();
   const description=document.getElementById('videoDescription').value.trim();
   if(!title||!url){ alert("Title and URL required"); return; }
-  await addDoc(collection(db,"videos"),{ title,url,description,user:currentUser.displayName||currentUser.email,userId:currentUser.uid,createdAt:new Date(),views:0 });
-  document.getElementById('videoTitle').value="";
+  await addDoc(collection(db,"videos"),{
+  title,
+  url,
+  description,
+  user: currentUser.displayName || currentUser.email,
+  userId: currentUser.uid,
+  createdAt: new Date(),
+  views: 0,
+  likes: 0,
+  dislikes: 0,
+  votes: {}
+});  document.getElementById('videoTitle').value="";
   document.getElementById('videoURL').value="";
   document.getElementById('videoDescription').value="";
   await loadVideos(); alert("Video uploaded!");
@@ -976,7 +959,60 @@ document.getElementById('searchInput').addEventListener('input',async ()=>{
   userHtml+="</table>";
   document.getElementById('userList').innerHTML=userHtml;
 });
+async function handleVote(type){
+  if (!currentUser || !currentVideoId) return;
 
+  const ref = doc(db, "videos", currentVideoId);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  let likes = data.likes || 0;
+  let dislikes = data.dislikes || 0;
+  let votes = data.votes || {};
+
+  const userId = currentUser.uid;
+  const previousVote = votes[userId];
+
+  // remove previous vote
+  if (previousVote === "like") likes--;
+  if (previousVote === "dislike") dislikes--;
+
+  // toggle
+  if (previousVote === type) {
+    delete votes[userId];
+  } else {
+    votes[userId] = type;
+    if (type === "like") likes++;
+    if (type === "dislike") dislikes++;
+  }
+
+  await updateDoc(ref, { likes, dislikes, votes });
+
+  updateLikeUI(likes, dislikes, votes[userId]);
+}
+
+document.getElementById('likeBtn').onclick = () => handleVote("like");
+document.getElementById('dislikeBtn').onclick = () => handleVote("dislike");
+
+function updateLikeUI(likes, dislikes, userVote){
+  document.getElementById('likeCount').innerText =
+    `${likes} 👍  •  ${dislikes} 👎`;
+
+  const likeBtn = document.getElementById('likeBtn');
+  const dislikeBtn = document.getElementById('dislikeBtn');
+
+  // reset
+  likeBtn.style.background = "#2196f3";
+  dislikeBtn.style.background = "#2196f3";
+
+  if (userVote === "like") likeBtn.style.background = "#4caf50";
+  if (userVote === "dislike") dislikeBtn.style.background = "#f44336";
+}
+window.db = db;
+window.collection = collection;
+window.getDocs = getDocs;
+window.updateDoc = updateDoc;
+window.doc = doc;
 showSection("login");
 </script>
 <div id="footer" style="margin-top:40px; padding:10px; text-align:center; border-top:1px solid #000; background:#eee;">
