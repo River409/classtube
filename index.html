@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -551,6 +552,8 @@ Contraseña:<br><input type="password" id="loginPassword"><br><br>
 
 <input type="button" value="Guardar Bio" id="saveBioBtn" style="display:none;"><br>
 <div id="profileStatus"></div><br><br>
+Profile Image URL:<br>
+<input type="text" id="profileImage"><br><br>
 
 <h3>Videos</h3>
 <div id="userVideos"></div>
@@ -708,32 +711,43 @@ document.getElementById("myProfileBtn").onclick=()=>loadProfile(true);
 document.getElementById("homeBtn").onclick=()=>{ showSection('feed'); loadVideos(); loadUsers(); };
 
 // SAVE BIO
-document.getElementById('saveBioBtn').onclick=async ()=>{
-  const bio=document.getElementById('bio').value.trim();
-  if(!currentUser) return;
-  try{ await updateDoc(doc(db,"users",currentUser.uid), { bio }); document.getElementById('profileStatus').innerText="Bio guardada!"; }
-  catch(err){ document.getElementById('profileStatus').innerText="Error: "+err.message; }
-};
+document.getElementById('saveBioBtn').onclick = async () => {
+  const bio = document.getElementById('bio').value.trim();
+  const profileImage = document.getElementById('profileImage').value.trim();
 
+  if (!currentUser) return;
+
+  try {
+    await updateDoc(doc(db,"users",currentUser.uid), {
+      bio,
+      profileImage
+    });
+
+    document.getElementById('profileStatus').innerText = "Perfil guardado!";
+  } catch(err) {
+    document.getElementById('profileStatus').innerText = "Error: " + err.message;
+  }
+};
 // LOAD USERS
 async function loadUsers(){
-  const snapshot=await getDocs(collection(db,"users"));
-let html = "";
+  const snapshot = await getDocs(collection(db,"users"));
 
-snapshot.forEach(doc => {
-  const data = doc.data();
+  let html = "";
 
-  html += `
-    <div class="userRow" onclick="showUserProfile('${doc.id}')">
-      ${createAvatar(data.username).outerHTML}
-      <span class="userName">${data.username}</span>
-    </div>
-  `;
-});
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const pfp = getUserPfp(data);
 
-document.getElementById('userList').innerHTML = html;
+    html += `
+      <div class="userRow" onclick="showUserProfile('${docSnap.id}')">
+        <div class="avatar" style="background-image:url('${pfp}')"></div>
+        <span class="userName">${data.username || "User"}</span>
+      </div>
+    `;
+  });
+
+  document.getElementById('userList').innerHTML = html;
 }
-
 // LOAD VIDEOS (24 RANDOM) — using stored thumbnails
 async function loadVideos() {
   const snapshot = await getDocs(collection(db, "videos"));
@@ -801,48 +815,94 @@ window.playVideo = async function(videoId){
 
   const ref = doc(db,"videos",videoId);
   const docSnap = await getDoc(ref);
+
   if(!docSnap.exists()) return;
 
   const data = docSnap.data();
 
-  // increment views
+  // =========================
+  // UPDATE VIEWS
+  // =========================
   const newViews = (data.views || 0) + 1;
   await updateDoc(ref, { views: newViews });
   data.views = newViews;
 
-  // UI
+  // =========================
+  // BASIC UI
+  // =========================
   document.getElementById('playerTitle').innerText = data.title;
 
-  const avatarUrl = getAvatarFromUsername(data.user);
+  document.getElementById('playerIframe').src =
+    data.url.replace("/view","/preview");
+
+  document.getElementById('playerDescription').innerText =
+    data.description || "";
+
+  // =========================
+  // UPLOADER (FIXED LOGIC)
+  // =========================
+  let uploaderData = null;
+
+  if (data.userId) {
+    const userSnap = await getDoc(doc(db,"users", data.userId));
+    if (userSnap.exists()) {
+      uploaderData = userSnap.data();
+    }
+  }
+
+  // 🔥 THIS is the important part:
+  const avatarUrl = getUserPfp(
+    uploaderData || { username: data.user }
+  );
+
   document.getElementById('playerUploader').innerHTML = `
-    <div class='avatar' style='background-image:url("${avatarUrl}")'></div>
-    <span class='channelHeader' onclick="showUserProfileByName('${data.user}')">${data.user}</span>
+    <div class="avatar" style="background-image:url('${avatarUrl}')"></div>
+    <span class="channelHeader"
+      onclick="showUserProfile('${data.userId}')">
+      ${data.user || "Unknown"}
+    </span>
   `;
 
-  document.getElementById('playerIframe').src = data.url.replace("/view","/preview");
-  document.getElementById('playerDescription').innerText = data.description || "";
+  // =========================
+  // STATS / TIME
+  // =========================
+  const createdAt = data.createdAt?.toDate
+    ? data.createdAt.toDate()
+    : new Date(data.createdAt?.seconds * 1000);
 
-  // time
-  const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt.seconds*1000);
   const diffDays = Math.floor((new Date() - createdAt)/(1000*60*60*24));
 
   const timeText =
-    diffDays < 30 ? `hace ${diffDays} día${diffDays===1?"":"s"}`
-    : diffDays < 365 ? `hace ${Math.floor(diffDays/30)} mes${Math.floor(diffDays/30)===1?"":"es"}`
-    : `hace ${Math.floor(diffDays/365)} año${Math.floor(diffDays/365)===1?"":"s"}`;
+    diffDays < 30
+      ? `hace ${diffDays} día${diffDays===1?"":"s"}`
+      : diffDays < 365
+        ? `hace ${Math.floor(diffDays/30)} mes${Math.floor(diffDays/30)===1?"":"es"}`
+        : `hace ${Math.floor(diffDays/365)} año${Math.floor(diffDays/365)===1?"":"s"}`;
 
   document.getElementById('playerStats').innerText =
     `${data.views || 0} vistas • ${timeText}`;
+
+  // =========================
+  // LIKES
+  // =========================
   const likes = data.likes || 0;
   const dislikes = data.dislikes || 0;
   const votes = data.votes || {};
   const userVote = currentUser ? votes[currentUser.uid] : null;
 
-updateLikeUI(likes, dislikes, userVote);
-  // sidebar videos (UNCHANGED)
+  updateLikeUI(likes, dislikes, userVote);
+
+  // =========================
+  // SIDEBAR VIDEOS
+  // =========================
   const snapshot = await getDocs(collection(db,"videos"));
   const allVid = [];
-  snapshot.forEach(d => { if(d.id !== videoId) allVid.push({id: d.id, data: d.data()}); });
+
+  snapshot.forEach(d => {
+    if (d.id !== videoId) {
+      allVid.push({ id: d.id, data: d.data() });
+    }
+  });
 
   const sel = [];
   while(sel.length < 6 && allVid.length > 0){
@@ -851,20 +911,22 @@ updateLikeUI(likes, dislikes, userVote);
     allVid.splice(idx,1);
   }
 
-let htmlOther = "";
-sel.forEach(v => {
-  const thumb = v.data.thumbnail || "https://via.placeholder.com/160x90.png?text=Video";
+  let htmlOther = "";
 
-  htmlOther += `
-    <div onclick="playVideo('${v.id}')">
-      <img src="${thumb}" width="140" height="80"
-        style="object-fit:cover; border:1px solid #000;">
-      <div style="font-size:13px; margin-top:4px;">
-        ${v.data.title}
+  sel.forEach(v => {
+    const thumb = v.data.thumbnail ||
+      "https://via.placeholder.com/160x90.png?text=Video";
+
+    htmlOther += `
+      <div onclick="playVideo('${v.id}')">
+        <img src="${thumb}" width="140" height="80"
+          style="object-fit:cover; border:1px solid #000;">
+        <div style="font-size:13px; margin-top:4px;">
+          ${v.data.title}
+        </div>
       </div>
-    </div>
-  `;
-});
+    `;
+  });
 
   document.getElementById('otherVideos').innerHTML = htmlOther;
 };
@@ -924,15 +986,16 @@ async function loadProfile(fromButton=false){
   renderProfileUI(data, currentUser.uid);
 }
 
-function renderProfileUI(data, uid){
-
-  // username
+function renderProfileUI(data, uid){  // username
   document.getElementById('profileUsername').innerText = data.username || "";
 
   // bio (CLEAR first to avoid leftover text)
   const bioText = data.bio || "";
   document.getElementById('profileBio').innerText = bioText;
   document.getElementById('bio').value = bioText;
+
+document.getElementById('profileImage').value = data.profileImage || "";
+
 
   // join date
   const createdAt = data.createdAt?.toDate
@@ -947,13 +1010,10 @@ document.getElementById('profileJoinDate').innerText =
   });
 
   // avatar (CLEAR FIRST — THIS FIXES YOUR BUG)
-  const avatarEl = document.getElementById('profileAvatar');
+const avatarEl = document.getElementById('profileAvatar');
 
-  if (avatarEl) {
-    avatarEl.style.backgroundImage = "none"; // IMPORTANT RESET
-    avatarEl.style.backgroundImage =
-      `url('${getAvatarFromUsername(data.username || "")}')`;
-  }
+avatarEl.style.backgroundImage =
+  `url('${getUserPfp(data)}')`;
 
   // permissions (ONLY for current user)
 const isMe = uid === currentUser.uid;
@@ -964,6 +1024,12 @@ document.getElementById('bio').readOnly = !isMe;
 document.getElementById('uploadSection').style.display = isMe ? "block" : "none";
 
   loadUserVideos(uid);
+}
+function getUserPfp(data){
+  if (data?.profileImage && data.profileImage.trim() !== "") {
+    return data.profileImage;
+  }
+  return getAvatarFromUsername(data?.username || "");
 }
 // SEARCH
 document.getElementById('searchInput').addEventListener('input', async () => {
