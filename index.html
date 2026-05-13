@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -686,19 +687,52 @@ onAuthStateChanged(auth, async user => {
 });
 
 // SIGNUP/LOGIN/LOGOUT
-document.getElementById('signupBtn').onclick=async ()=>{
-  const username=document.getElementById('signupUsername').value.trim();
-  const email=document.getElementById('signupEmail').value.trim();
-  const password=document.getElementById('signupPassword').value;
-  if(!username){ status.innerText="Username required"; return; }
-  try{
-    const userCred=await createUserWithEmailAndPassword(auth,email,password);
-    await setDoc(doc(db,"users",userCred.user.uid),{username,email,bio:"",createdAt:new Date()});
-    document.getElementById('signupUsername').value="";
-    document.getElementById('signupEmail').value="";
-    document.getElementById('signupPassword').value="";
-    status.innerText="Account created!";
-  }catch(err){ status.innerText=err.message; }
+document.getElementById('signupBtn').onclick = async () => {
+  const username = document.getElementById('signupUsername').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+
+  if (!username) {
+    status.innerText = "Username required";
+    return;
+  }
+
+  try {
+    // 🔎 CHECK IF USERNAME EXISTS
+    const usersSnap = await getDocs(collection(db, "users"));
+    let exists = false;
+
+    usersSnap.forEach(docSnap => {
+      const data = docSnap.data();
+      if ((data.username || "").toLowerCase() === username.toLowerCase()) {
+        exists = true;
+      }
+    });
+
+    if (exists) {
+      status.innerText = "Username already taken";
+      return;
+    }
+
+    // ✅ CREATE AUTH USER
+    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+
+    // ✅ SAVE USER PROFILE
+    await setDoc(doc(db, "users", userCred.user.uid), {
+      username,
+      email,
+      bio: "",
+      createdAt: new Date()
+    });
+
+    document.getElementById('signupUsername').value = "";
+    document.getElementById('signupEmail').value = "";
+    document.getElementById('signupPassword').value = "";
+
+    status.innerText = "Account created!";
+  } catch (err) {
+    status.innerText = err.message;
+  }
 };
 document.getElementById('loginBtn').onclick=async ()=>{
   const email=document.getElementById('loginEmail').value.trim();
