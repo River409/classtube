@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Classtube</title>
+<title>Classtube - Home</title>
 <style>
 body {
     margin: 0;
@@ -683,7 +682,9 @@ URL de google drive de un video:<br><input type="text" id="videoURL"><br>
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
+function setPageTitle(page){
+  document.title = `Classtube - ${page}`;
+}
 const firebaseConfig = {
   apiKey:"AIzaSyC2QdW6Gq3dnFf2JL4-vET-68M6LvTJUvw",
   authDomain:"classtube2-1436a.firebaseapp.com",
@@ -754,12 +755,28 @@ function showSection(section){
   document.getElementById("feedSection").style.display = (section==="feed")?"block":"none";
   document.getElementById("profileSection").style.display = (section==="profile")?"block":"none";
   document.getElementById("videoPlayerSection").style.display = (section==="player")?"block":"none";
+
+  // dynamic titles
+  if(section === "feed") setPageTitle("Home");
+  if(section === "profile") setPageTitle("Profile");
+  if(section === "player") setPageTitle("Watch");
+  if(section === "login") setPageTitle("Login");
 }
 
 // TABS
-document.getElementById('videosTab').onclick = ()=>{ document.getElementById('videosSection').style.display="block"; document.getElementById('peopleSection').style.display="none"; };
-document.getElementById('peopleTab').onclick = ()=>{ document.getElementById('videosSection').style.display="none"; document.getElementById('peopleSection').style.display="block"; };
+document.getElementById('videosTab').onclick = ()=>{
+  document.getElementById('videosSection').style.display="block";
+  document.getElementById('peopleSection').style.display="none";
 
+  setPageTitle("Home");
+};
+
+document.getElementById('peopleTab').onclick = ()=>{
+  document.getElementById('videosSection').style.display="none";
+  document.getElementById('peopleSection').style.display="block";
+
+  setPageTitle("People");
+};
 // AUTH STATE
 onAuthStateChanged(auth, async user => {
   if(!user){ showSection("login"); headerLinks.style.display="none"; status.innerText="Please login."; return; }
@@ -970,7 +987,7 @@ window.playVideo = async function(videoId){
   const docSnap = await getDoc(ref);
 
   if(!docSnap.exists()) return;
-
+  document.title = `Classtube - ${data.title}`;
   const data = docSnap.data();
 
   // =========================
@@ -1146,7 +1163,7 @@ function renderProfileUI(data, uid){  // username
   const bioText = data.bio || "";
   document.getElementById('profileBio').innerText = bioText;
   document.getElementById('bio').value = bioText;
-
+  document.title = `Classtube - ${data.username}`;
 document.getElementById('profileImage').value = data.profileImage || "";
 
 
