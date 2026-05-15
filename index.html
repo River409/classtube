@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -44,7 +45,24 @@ body::before {
 #logoImg {
     height: 42px;
 }
+#whatsNewPanel {
+    width: 240px;
+    background: linear-gradient(to bottom, #ffffff, #ececec);
+    border: 1px solid #bdbdbd;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    padding: 10px;
+}
 
+/* blue mini header */
+.whatsNewHeader {
+    background: linear-gradient(to bottom, #4f9ad1, #2b6ea3);
+    color: white;
+    font-weight: bold;
+    padding: 6px 8px;
+    margin-bottom: 10px;
+    border: 1px solid #1d4e73;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+}
 /* header links */
 #headerLinks a {
     color: #fff !important;
@@ -623,6 +641,20 @@ Contraseña:<br><input type="password" id="loginPassword"><br><br>
 <div class="tabButtons">
   <button id="videosTab">Videos</button>
   <button id="peopleTab">Personas</button>
+   <div class="whatsNewHeader">
+      Novedades    </div>
+
+    <div class="updatePost">
+      <b>📺 Nuevo sistema de perfiles</b>
+      <div class="updateMeta">Mayo 2026</div>
+      Users can now upload profile pictures and bios.
+    </div>
+
+    <div class="updatePost">
+      <b>👍 Botones de me gusta/no me gusta</b>
+      <div class="updateMeta">Mayo 2026</div>
+      Videos now support ratings.
+    </div>
 </div>
 
 <div id="videosSection">
@@ -932,14 +964,14 @@ async function loadUsers() {
 
   document.getElementById('userList').innerHTML = html;
 }
-// LOAD VIDEOS (15 RANDOM) — using stored thumbnails
+// LOAD VIDEOS (10 RANDOM) — using stored thumbnails
 async function loadVideos() {
   const snapshot = await getDocs(collection(db, "videos"));
   const allVideos = [];
   snapshot.forEach(doc => allVideos.push({ id: doc.id, data: doc.data() }));
 
   const selected = [];
-  while (selected.length < 15 && allVideos.length > 0) {
+  while (selected.length < 10 && allVideos.length > 0) {
     const idx = Math.floor(Math.random() * allVideos.length);
     selected.push(allVideos[idx]);
     allVideos.splice(idx, 1);
