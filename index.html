@@ -1,574 +1,1180 @@
 
+
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Classtube</title>
 <style>
-body {
+html, body {
     margin: 0;
-    font-family: Tahoma, sans-serif;
-    background: #e9e9e9;
-    color: #333;
+    padding: 0;
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-size: 13px;
+    color: #2e3b2b;
+    background: #c9d9c1;
+    overflow-x: hidden;
 }
 
-/* soft web 2.0 glow background */
+/* =========================================
+   MASSIVE WEB 2.0 BACKGROUND
+========================================= */
+
 body::before {
     content: "";
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle at top, #ffffff 0%, #dcdcdc 40%, #cfcfcf 100%);
+
+    background:
+        radial-gradient(circle at top,
+            rgba(255,255,255,0.95) 0%,
+            rgba(228,242,221,0.95) 25%,
+            rgba(186,209,175,0.96) 60%,
+            rgba(142,170,131,1) 100%
+        );
+
+    z-index: -2;
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+
+    background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+
+    background-size: 4px 4px;
+
+    opacity: 0.35;
+
     z-index: -1;
 }
 
-/* =========================
-   GLOBAL RESET (KEEP SHADOWS)
-========================= */
+/* =========================================
+   GLOBAL
+========================================= */
 
 * {
-    border-radius: 4px;
+    box-sizing: border-box;
+
+    transition:
+        background 160ms ease,
+        box-shadow 160ms ease,
+        transform 160ms ease,
+        border 160ms ease;
 }
 
-/* =========================
-   HEADER (ICONIC YOUTUBE BLUE GRADIENT BAR)
-========================= */
+/* =========================================
+   HEADER BAR
+========================================= */
 
 #headerTable {
+    position: relative;
+    overflow: hidden;
+
     width: 100%;
-    background: linear-gradient(to bottom, #2c6aa6 0%, #1b4f7a 100%);
-    color: white;
-    padding: 10px 14px;
-    border-bottom: 3px solid #0d2a44;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+
+    background:
+        linear-gradient(
+            to bottom,
+            #a7dd89 0%,
+            #78b95b 30%,
+            #5a973e 48%,
+            #44752f 49%,
+            #6dad52 100%
+        );
+
+    border-bottom: 4px solid #26461c;
+
+    padding: 10px 18px;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.75),
+        inset 0 -1px 0 rgba(0,0,0,0.2),
+        0 4px 14px rgba(0,0,0,0.4);
 }
+
+/* glossy shine */
+#headerTable::after {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: -40%;
+
+    width: 40%;
+    height: 100%;
+
+    background:
+        linear-gradient(
+            120deg,
+            transparent,
+            rgba(255,255,255,0.35),
+            transparent
+        );
+
+    animation: webshine 6s linear infinite;
+}
+
+@keyframes webshine {
+    0% { left: -50%; }
+    100% { left: 130%; }
+}
+
+/* =========================================
+   LOGO
+========================================= */
 
 #logoImg {
-    height: 42px;
-}
-#whatsNewPanel {
-    width: 240px;
-    background: linear-gradient(to bottom, #ffffff, #ececec);
-    border: 1px solid #bdbdbd;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-    padding: 10px;
+    height: 64px;
+
+    filter:
+        drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+
+    image-rendering: auto;
 }
 
-/* blue mini header */
-.whatsNewHeader {
-    background: linear-gradient(to bottom, #4f9ad1, #2b6ea3);
-    color: white;
-    font-weight: bold;
-    padding: 6px 8px;
-    margin-bottom: 10px;
-    border: 1px solid #1d4e73;
-    text-shadow: 0 1px 0 rgba(0,0,0,0.3);
-}
-/* header links */
-#headerLinks a {
-    color: #fff !important;
-    text-decoration: none;
-    font-size: 13px;
-    padding: 6px 10px;
-    margin: 0 2px;
-    background: linear-gradient(to bottom, #4f9ad1, #2b6ea3);
-    border: 1px solid #1d4e73;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
-}
-
-#headerLinks a:hover {
-    background: linear-gradient(to bottom, #66b2e6, #2b6ea3);
-}
-/* MAIN NAV BUTTONS LOWER */
-#headerLinks {
-    position: relative;
-    top: 5px;
-}
-
-/* =========================
-   PAGE WRAPPER (CENTERED CARD ERA)
-========================= */
+/* =========================================
+   MAIN WRAPPERS
+========================================= */
 
 #feedSection,
 #profileSection,
-#videoPlayerSection {
+#videoPlayerSection,
+#loginSection {
+
     width: 1000px;
-    margin: 20px auto;
-    background: #f7f7f7;
-    border: 1px solid #cfcfcf;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+
+    margin: 22px auto;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #fcfffa 0%,
+            #eef7e8 100%
+        );
+
+    border:
+        1px solid #9fbd92;
+
+    border-radius: 10px;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.95),
+        inset 0 -1px 0 rgba(0,0,0,0.04),
+        0 4px 16px rgba(0,0,0,0.22);
+
+    padding: 18px;
 }
 
-/* =========================
-   LINKS (OLD WEB BLUE)
-========================= */
+/* =========================================
+   LINKS
+========================================= */
 
 a {
-    color: #1a6db3;
+    color: #2f7c2b;
     text-decoration: none;
+    font-weight: bold;
 }
 
 a:hover {
+    color: #49a33f;
     text-decoration: underline;
 }
 
-/* VIDEO WATERMARK */
-#watermark {
+/* =========================================
+   CHROME WEB 2.0 TABS
+========================================= */
+
+#headerLinks a,
+.tabButtons button,
+button,
+input[type="button"] {
+
+    position: relative;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff 0%,
+            #edf8e7 40%,
+            #d3ebc6 41%,
+            #b5d59e 52%,
+            #dff2d3 100%
+        );
+
+    border:
+        1px solid #6f9860;
+
+    border-bottom:
+        1px solid #4c6f3f;
+
+    border-radius:
+        13px 13px 4px 4px;
+
+    padding:
+        8px 16px;
+
+    color:
+        #2d4924;
+
+    font-size:
+        13px;
+
+    font-weight:
+        bold;
+
+    text-shadow:
+        0 1px 0 rgba(255,255,255,0.8);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.95),
+        inset 0 -1px 0 rgba(0,0,0,0.05),
+        0 1px 2px rgba(0,0,0,0.2);
+
+    cursor: pointer;
+}
+
+/* top glossy line */
+#headerLinks a::before,
+.tabButtons button::before,
+button::before,
+input[type="button"]::before {
+
+    content: "";
+
     position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 90px;
-    opacity: 0.75;
-    z-index: 9999;
+
+    left: 8px;
+    right: 8px;
+    top: 2px;
+
+    height: 45%;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(255,255,255,0.85),
+            rgba(255,255,255,0)
+        );
+
     pointer-events: none;
 }
 
-/* make iframe wrapper stack correctly */
-.videoContainer {
-    position: relative;
-    display: inline-block;
-}
-button,
-input[type="button"] {
-    background: linear-gradient(to bottom, #ffffff 0%, #dcdcdc 100%);
-    border: 1px solid #a9a9a9;
-    color: #333;
-    padding: 6px 10px;
-    font-size: 13px;
-    cursor: pointer;
-    box-shadow: inset 0 1px 0 #fff;
-}
-
+/* hover */
+#headerLinks a:hover,
+.tabButtons button:hover,
 button:hover,
 input[type="button"]:hover {
-    background: linear-gradient(to bottom, #ffffff, #cfcfcf);
+
+    transform: translateY(-2px);
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff 0%,
+            #f4ffef 40%,
+            #def4d0 41%,
+            #c4e4b3 52%,
+            #f1ffeb 100%
+        );
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,1),
+        0 4px 12px rgba(0,0,0,0.22);
 }
 
+/* active */
+#headerLinks a:active,
+.tabButtons button:active,
 button:active,
 input[type="button"]:active {
-    background: #d0d0d0;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+
+    transform: translateY(1px) scale(0.98);
+
+    background:
+        linear-gradient(
+            to bottom,
+            #bfd8b1,
+            #e5f5db
+        );
+
+    box-shadow:
+        inset 0 2px 5px rgba(0,0,0,0.18);
 }
 
-/* =========================
-   INPUTS (SOFT GRADIENT INPUTS)
-========================= */
+/* =========================================
+   TAB STRIP
+========================================= */
+
+.tabButtons {
+    padding-bottom: 6px;
+
+    border-bottom:
+        2px solid #95b489;
+
+    margin-bottom: 14px;
+}
+
+.tabButtons button {
+    margin-right: 5px;
+}
+
+.tabButtons button.active {
+    top: 1px;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #f7fff3
+        );
+
+    border-bottom:
+        1px solid #ffffff;
+}
+
+/* =========================================
+   INPUTS
+========================================= */
 
 input,
 textarea {
-    border: 1px solid #bbb;
-    padding: 6px;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #f4faef
+        );
+
+    border:
+        1px solid #96b488;
+
+    border-radius: 6px;
+
+    padding: 7px;
+
     font-size: 13px;
-    background: linear-gradient(to bottom, #ffffff, #f2f2f2);
+
+    color: #2d3b2a;
+
+    box-shadow:
+        inset 0 1px 2px rgba(0,0,0,0.08),
+        0 1px 0 rgba(255,255,255,0.8);
 }
 
-/* =========================
-   LOGIN PANEL (CARD STYLE)
-========================= */
+input:focus,
+textarea:focus {
 
-#loginSection {
-    width: 340px;
-    margin: 60px auto;
-    background: #ffffff;
-    border: 1px solid #cfcfcf;
-    padding: 16px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    outline: none;
+
+    border-color:
+        #5da147;
+
+    box-shadow:
+        0 0 7px rgba(93,161,71,0.5);
 }
 
-/* =========================
-   VIDEO GRID (WEB 2.0 CARDS)
-========================= */
+/* =========================================
+   VIDEO GRID
+========================================= */
 
 #homeThumbnails {
     display: flex;
     flex-wrap: wrap;
     gap: 14px;
-    padding: 12px;
 }
 
 #homeThumbnails div {
+
     width: 180px;
-    background: linear-gradient(to bottom, #ffffff, #f0f0f0);
-    border: 1px solid #d0d0d0;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #edf6e7
+        );
+
+    border:
+        1px solid #adc69f;
+
+    border-radius: 8px;
+
     padding: 6px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
 
-#homeThumbnails div:hover {
-    box-shadow: 0 3px 8px rgba(0,0,0,0.25);
-    transform: translateY(-1px);
-}
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.8),
+        0 2px 6px rgba(0,0,0,0.18);
 
-/* thumbnails */
-#homeThumbnails img {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    border: 1px solid #999;
-}
-
-/* =========================
-   VIDEO TITLE (BLUE LINK ERA)
-========================= */
-
-.videoTitle {
-    font-size: 13px;
-    font-weight: bold;
-    color: #1a6db3;
-    margin-top: 6px;
     cursor: pointer;
 }
 
-/* =========================
-   PROFILE (WEB 2.0 CHANNEL CARD)
-========================= */
+#homeThumbnails div:hover {
 
-#profileSection {
-    background: #fff;
-    border: 1px solid #cfcfcf;
-    padding: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transform:
+        translateY(-4px);
+
+    border-color:
+        #709f5d;
+
+    box-shadow:
+        0 8px 18px rgba(0,0,0,0.28);
 }
 
-#profileHeader {
-    display: flex;
-    gap: 14px;
-    align-items: center;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-    background: linear-gradient(to bottom, #ffffff, #f2f2f2);
+#homeThumbnails img {
+
+    width: 100%;
+    height: 100px;
+
+    object-fit: cover;
+
+    border:
+        1px solid #68865c;
+
+    border-radius: 4px;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.2);
 }
 
-#profileUsername {
-    font-size: 22px;
-    font-weight: bold;
-    color: #333;
+/* =========================================
+   VIDEO TITLES
+========================================= */
+
+.videoTitle {
+
+    margin-top: 6px;
+
+    color:
+        #2d7c28;
+
+    font-size:
+        13px;
+
+    font-weight:
+        bold;
+
+    text-shadow:
+        0 1px 0 rgba(255,255,255,0.7);
 }
 
-#profileBio {
-    font-size: 13px;
-    color: #666;
+.videoMeta {
+    color: #687564;
+    font-size: 12px;
 }
 
-/* avatar */
-.avatar {
-    width: 40px;
-    height: 40px;
-    border: 1px solid #999;
-    background-size: cover;
-    background-position: center;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
-}
-
-/* big avatar */
-#profileHeader .avatar {
-    width: 90px;
-    height: 90px;
-}
-
-/* =========================
-   USER LIST (SOFT ROWS)
-========================= */
+/* =========================================
+   USER ROWS
+========================================= */
 
 .userRow {
+
     display: flex;
     align-items: center;
     gap: 10px;
+
     padding: 8px;
-    border-bottom: 1px solid #e6e6e6;
+
+    border-bottom:
+        1px solid #dce8d5;
+
+    border-radius: 6px;
+
+    cursor: pointer;
 }
 
 .userRow:hover {
-    background: #f5f5f5;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #e5f3de
+        );
+
+    border-left:
+        4px solid #67a64c;
+
+    transform:
+        translateX(3px);
+
+    box-shadow:
+        0 2px 8px rgba(0,0,0,0.12);
 }
 
-/* =========================
-   VIDEO PLAYER AREA (OLD WATCH PAGE)
-========================= */
+/* =========================================
+   AVATARS
+========================================= */
+
+.avatar {
+
+    width: 42px;
+    height: 42px;
+
+    background-size: cover;
+    background-position: center;
+
+    border:
+        1px solid #6e8e63;
+
+    border-radius: 6px;
+
+    box-shadow:
+        inset 0 1px 2px rgba(0,0,0,0.18),
+        0 1px 2px rgba(255,255,255,0.5);
+}
+
+#profileHeader .avatar {
+
+    width: 96px;
+    height: 96px;
+}
+
+/* =========================================
+   PROFILE HEADER
+========================================= */
+
+#profileHeader {
+
+    display: flex;
+    gap: 14px;
+    align-items: center;
+
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+
+    border-bottom:
+        1px solid #cfdfc8;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #edf6e8
+        );
+
+    border-radius: 8px;
+}
+
+#profileUsername {
+
+    font-size: 24px;
+    font-weight: bold;
+
+    color: #2c6127;
+
+    text-shadow:
+        0 1px 0 rgba(255,255,255,0.8);
+}
+
+/* =========================================
+   PLAYER
+========================================= */
 
 #videoPlayerWrapper {
     display: flex;
     gap: 20px;
 }
 
-/* main video */
-#videoPlayerMain iframe {
-    border: 1px solid #000;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+#videoPlayerMain {
+    flex: 2;
 }
 
-/* sidebar */
-#otherVideos div {
+#playerIframe {
+
+    border:
+        1px solid #37592d;
+
+    border-radius: 6px;
+
+    box-shadow:
+        0 6px 16px rgba(0,0,0,0.35);
+}
+
+#otherVideos {
+    flex: 1;
+
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#otherVideos div {
+
     padding: 6px;
-    border-bottom: 1px solid #e6e6e6;
-    cursor: pointer;
+
+    border-radius: 6px;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #edf6e8
+        );
+
+    border:
+        1px solid #c0d6b5;
 }
 
 #otherVideos div:hover {
-    background: #f3f3f3;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #dff0d7
+        );
+
+    transform:
+        translateX(3px);
 }
 
-/* =========================
-   METADATA TEXT
-========================= */
+/* =========================================
+   LIKE BUTTONS
+========================================= */
 
-.videoMeta {
-    font-size: 12px;
-    color: #777;
+#likeBtn {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #9de07d,
+            #5f9f45
+        );
+
+    color: white;
+
+    border:
+        1px solid #386527;
 }
 
-/* =========================
-   TABS (WEB 2.0 PILLS)
-========================= */
+#dislikeBtn {
 
-.tabButtons button {
-    background: linear-gradient(to bottom, #ffffff, #e0e0e0);
-    border: 1px solid #bbb;
+    background:
+        linear-gradient(
+            to bottom,
+            #f1f4ef,
+            #bcc8b5
+        );
+
+    color:
+        #33422d;
+
+    border:
+        1px solid #73816d;
 }
 
-.tabButtons button:hover {
-    background: linear-gradient(to bottom, #ffffff, #d0d0d0);
+/* =========================================
+   WHATS NEW PANEL
+========================================= */
+
+#whatsNewPanel {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #edf7e7
+        );
+
+    border:
+        1px solid #a8c29b;
+
+    border-radius: 8px;
+
+    box-shadow:
+        0 2px 10px rgba(0,0,0,0.15);
 }
 
-/* =========================
+.whatsNewHeader {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #8dd46f,
+            #5f9f45
+        );
+
+    border:
+        1px solid #3f6f2e;
+
+    border-radius: 6px;
+
+    color: white;
+
+    font-weight: bold;
+
+    padding: 7px 10px;
+
+    text-shadow:
+        0 1px 0 rgba(0,0,0,0.35);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+/* =========================================
    FOOTER
-========================= */
+========================================= */
 
 #footer {
+
     margin-top: 40px;
+
     padding: 14px;
+
     text-align: center;
-    font-size: 12px;
-    color: #777;
-    background: linear-gradient(to bottom, #ffffff, #eaeaea);
-    border-top: 1px solid #ccc;
-    box-shadow: inset 0 1px 0 #fff;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #f9fff5,
+            #dcebd4
+        );
+
+    border-top:
+        1px solid #a4bf99;
+
+    color:
+        #61705d;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.8);
 }
 
-/* =========================
-   MOBILE
-========================= */
+/* =========================================
+   WATERMARK
+========================================= */
 
-@media (max-width: 768px) {
-    #feedSection,
-    #profileSection,
-    #videoPlayerSection {
-        width: 100%;
-    }
-
-    #homeThumbnails {
-        justify-content: center;
-    }
-
-    #videoPlayerWrapper {
-        flex-direction: column;
-    }
-}
-/* =========================
-   USER HOVER (2008–2009 YOUTUBE STYLE)
-========================= */
-
-.userRow {
-    transition: background 180ms ease, transform 120ms ease;
+#watermark {
+    opacity: 0.7;
 }
 
-.userRow:hover {
-    background: linear-gradient(to bottom, #fdfdfd, #e9e9e9);
-    border-left: 3px solid #1a6db3;
-    transform: translateX(2px);
-}
+/* =========================================
+   ANIMATIONS
+========================================= */
 
-/* avatar subtle glow on hover */
-.userRow:hover .avatar {
-    box-shadow: 0 0 6px rgba(26, 109, 179, 0.4);
-}
-
-/* smooth page feel (very subtle, not modern) */
-* {
-    transition: background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-}
-
-/* =========================
-   HEADER GLOW PULSE (VERY SUBTLE OLD WEB SHINE)
-========================= */
-
-#headerTable {
-    animation: headerGlow 6s infinite ease-in-out;
-}
-
-@keyframes headerGlow {
-    0%, 100% {
-        box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-    }
-    50% {
-        box-shadow: 0 2px 14px rgba(0,0,0,0.45);
-    }
-}
-
-/* =========================
-   BUTTON HOVER LIFT (WEB 2.0 FEEL)
-========================= */
-
-button:hover,
-input[type="button"]:hover {
-    transform: translateY(-1px);
-}
-
-button:active,
-input[type="button"]:active {
-    transform: translateY(1px) scale(0.98);
-}
-
-/* =========================
-   VIDEO CARD FLOAT HOVER
-========================= */
-
-#homeThumbnails div {
-    transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
-}
-
-#homeThumbnails div:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 14px rgba(0,0,0,0.25);
-}
-
-/* =========================
-   IMAGE FADE-IN (VERY OLD YOUTUBE FEEL)
-========================= */
-
-#homeThumbnails img,
-#otherVideos img {
-    opacity: 0;
-    animation: fadeIn 500ms ease forwards;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.98);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-/* stagger feel */
-#homeThumbnails div:nth-child(1) img { animation-delay: 0ms; }
-#homeThumbnails div:nth-child(2) img { animation-delay: 50ms; }
-#homeThumbnails div:nth-child(3) img { animation-delay: 100ms; }
-#homeThumbnails div:nth-child(4) img { animation-delay: 150ms; }
-#homeThumbnails div:nth-child(5) img { animation-delay: 200ms; }
-#homeThumbnails div:nth-child(6) img { animation-delay: 250ms; }
-
-/* =========================
-   SIDEBAR SLIDE-IN FEEL
-========================= */
-
-#otherVideos div {
-    opacity: 0;
-    transform: translateX(10px);
-    animation: slideIn 300ms ease forwards;
-}
-
-#otherVideos div:nth-child(1) { animation-delay: 0ms; }
-#otherVideos div:nth-child(2) { animation-delay: 60ms; }
-#otherVideos div:nth-child(3) { animation-delay: 120ms; }
-#otherVideos div:nth-child(4) { animation-delay: 180ms; }
-#otherVideos div:nth-child(5) { animation-delay: 240ms; }
-
-@keyframes slideIn {
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-/* =========================
-   PROFILE OPEN FADE (CHANNEL PAGE LOAD FEEL)
-========================= */
-
+#feedSection,
 #profileSection,
 #videoPlayerSection,
-#feedSection {
-    animation: pageOpen 220ms ease-out;
+#loginSection {
+    animation: pagePop 240ms ease-out;
 }
 
-@keyframes pageOpen {
+@keyframes pagePop {
+
     from {
         opacity: 0;
-        transform: translateY(6px);
+        transform: translateY(8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-/* =========================
-   BLUE HEADER SHINE STRIPE (VERY 2009 WEB 2.0)
-========================= */
+/* =========================================
+   IMAGE FADE
+========================================= */
 
-#headerTable {
-    position: relative;
-    overflow: hidden;
+#homeThumbnails img,
+#otherVideos img {
+
+    opacity: 0;
+
+    animation:
+        fadeImage 400ms ease forwards;
 }
 
-#headerTable::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -60%;
-    width: 40%;
-    height: 100%;
-    background: linear-gradient(
-        120deg,
-        transparent,
-        rgba(255,255,255,0.25),
-        transparent
-    );
-    animation: shine 5s infinite;
+@keyframes fadeImage {
+
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
-@keyframes shine {
-    0% { left: -60%; }
-    100% { left: 120%; }
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 768px) {
+
+    #feedSection,
+    #profileSection,
+    #videoPlayerSection,
+    #loginSection {
+
+        width: 100%;
+        margin: 0;
+        border-radius: 0;
+    }
+
+    #videoPlayerWrapper {
+        flex-direction: column;
+    }
+
+    #homeThumbnails {
+        justify-content: center;
+    }
+
+    #playerIframe {
+        width: 100%;
+        height: auto;
+    }
 }
 
-/* =========================
-   TAB BUTTON PRESS FEEL
-========================= */
-
-.tabButtons button {
-    transition: transform 120ms ease, background 200ms ease;
-}
-
-.tabButtons button:active {
-    transform: scale(0.97);
-}
-
-/* =========================
-   LIKE BUTTON MICRO FEEDBACK
-========================= */
-
-#likeBtn, #dislikeBtn {
-    transition: transform 120ms ease, background 200ms ease;
-}
-
-#likeBtn:active,
-#dislikeBtn:active {
-    transform: scale(0.95);
-}
-
-/* =========================
-   REDUCE MOTION (ACCESSIBILITY SAFE FALLBACK)
-========================= */
+/* =========================================
+   REDUCED MOTION
+========================================= */
 
 @media (prefers-reduced-motion: reduce) {
+
     * {
         animation: none !important;
         transition: none !important;
+    }
+}
+/* =========================================
+   FLASH ERA OVERRIDE
+========================================= */
+
+body {
+    font-family: Verdana, Arial, sans-serif;
+    background: #8db17c;
+    color: #1f2a1d;
+}
+
+/* stronger flashy background */
+body::before {
+
+    background:
+        radial-gradient(circle at top,
+            #ffffff 0%,
+            #dff5d0 20%,
+            #9fca86 55%,
+            #5d8f49 100%
+        );
+}
+
+/* =========================================
+   HEADER = FLASH PORTAL STYLE
+========================================= */
+
+#headerTable {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #c8ff9d 0%,
+            #91db62 20%,
+            #58ad34 50%,
+            #3d7e22 51%,
+            #79c255 100%
+        );
+
+    border-bottom:
+        4px solid #214a12;
+
+    box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.8),
+        inset 0 -2px 0 rgba(0,0,0,0.18),
+        0 6px 18px rgba(0,0,0,0.35);
+}
+
+/* =========================================
+   FLASH BUTTONS
+========================================= */
+
+button,
+input[type="button"],
+#headerLinks a,
+.tabButtons button {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff 0%,
+            #d9ffbd 15%,
+            #8ee05f 48%,
+            #58a82f 49%,
+            #84d45d 100%
+        );
+
+    border:
+        2px solid #2f5f1c;
+
+    border-radius:
+        14px 14px 5px 5px;
+
+    color:
+        #173010;
+
+    font-weight:
+        bold;
+
+    text-shadow:
+        0 1px 0 rgba(255,255,255,0.9);
+
+    box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.8),
+        inset 0 -2px 0 rgba(0,0,0,0.08),
+        0 3px 0 #2d5b1c,
+        0 5px 12px rgba(0,0,0,0.25);
+
+    letter-spacing: 0.2px;
+}
+
+/* hover = flash glow */
+button:hover,
+input[type="button"]:hover,
+#headerLinks a:hover,
+.tabButtons button:hover {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff 0%,
+            #efffe4 12%,
+            #a6f87a 48%,
+            #67be3d 49%,
+            #9cf16e 100%
+        );
+
+    transform:
+        translateY(-2px) scale(1.02);
+
+    box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.95),
+        0 0 14px rgba(130,255,120,0.7),
+        0 4px 0 #2d5b1c,
+        0 8px 18px rgba(0,0,0,0.3);
+}
+
+/* click */
+button:active,
+input[type="button"]:active,
+#headerLinks a:active,
+.tabButtons button:active {
+
+    transform:
+        translateY(3px);
+
+    box-shadow:
+        inset 0 3px 6px rgba(0,0,0,0.2),
+        0 1px 0 #2d5b1c;
+}
+
+/* =========================================
+   PANELS
+========================================= */
+
+#feedSection,
+#profileSection,
+#videoPlayerSection,
+#loginSection {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #e9f8df
+        );
+
+    border:
+        2px solid #6b9955;
+
+    border-radius: 12px;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.95),
+        0 6px 18px rgba(0,0,0,0.22);
+}
+
+/* =========================================
+   FLASH VIDEO CARDS
+========================================= */
+
+#homeThumbnails div {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff 0%,
+            #eefde3 45%,
+            #d4efc2 100%
+        );
+
+    border:
+        2px solid #7ead68;
+
+    border-radius: 10px;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.9),
+        0 4px 10px rgba(0,0,0,0.2);
+}
+
+#homeThumbnails div:hover {
+
+    transform:
+        translateY(-5px) scale(1.02);
+
+    border-color:
+        #4e8b31;
+
+    box-shadow:
+        0 0 18px rgba(110,255,120,0.55),
+        0 8px 20px rgba(0,0,0,0.3);
+}
+
+/* =========================================
+   VIDEO TITLES
+========================================= */
+
+.videoTitle {
+
+    color:
+        #1f7f1f;
+
+    font-weight:
+        bold;
+
+    text-shadow:
+        0 1px 0 rgba(255,255,255,0.9);
+
+    font-size: 13px;
+}
+
+/* =========================================
+   INPUTS
+========================================= */
+
+input,
+textarea {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #effbe9
+        );
+
+    border:
+        2px solid #7aa565;
+
+    border-radius: 7px;
+
+    box-shadow:
+        inset 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* =========================================
+   PROFILE HEADER
+========================================= */
+
+#profileHeader {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #e8f8de
+        );
+
+    border:
+        2px solid #b6d3a8;
+
+    border-radius: 10px;
+}
+
+/* =========================================
+   WHATS NEW PANEL
+========================================= */
+
+#whatsNewPanel {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #ffffff,
+            #ecfbe3
+        );
+
+    border:
+        2px solid #79aa63;
+
+    box-shadow:
+        0 4px 12px rgba(0,0,0,0.2);
+}
+
+.whatsNewHeader {
+
+    background:
+        linear-gradient(
+            to bottom,
+            #b6ff8c,
+            #62b43b
+        );
+
+    border:
+        2px solid #38711f;
+
+    color: white;
+
+    font-size: 14px;
+
+    text-shadow:
+        0 1px 2px rgba(0,0,0,0.4);
+}
+
+/* =========================================
+   FLASH GLOW
+========================================= */
+
+#logoImg,
+button:hover,
+#homeThumbnails div:hover {
+
+    filter:
+        drop-shadow(0 0 8px rgba(180,255,160,0.6));
+}
+
+/* =========================================
+   OLD FLASH ANIMATION FEEL
+========================================= */
+
+#feedSection,
+#profileSection,
+#videoPlayerSection {
+
+    animation:
+        flashPop 300ms ease-out;
+}
+
+@keyframes flashPop {
+
+    0% {
+        opacity: 0;
+        transform: scale(0.97);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
     }
 }
 }.videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
@@ -827,7 +1433,43 @@ onAuthStateChanged(auth, async user => {
   await loadVideos();
   await loadProfile();
 });
+// active header tabs
 
+const homeBtn = document.getElementById("homeBtn");
+const profileBtn = document.getElementById("myProfileBtn");
+
+function setActiveTab(tab){
+
+    homeBtn.classList.remove("active");
+    profileBtn.classList.remove("active");
+
+    if(tab === "home"){
+        homeBtn.classList.add("active");
+    }
+
+    if(tab === "profile"){
+        profileBtn.classList.add("active");
+    }
+}
+
+// HOME
+document.getElementById("homeBtn").onclick = () => {
+    setActiveTab("home");
+
+    showSection("feed");
+    loadVideos();
+    loadUsers();
+};
+
+// PROFILE
+document.getElementById("myProfileBtn").onclick = () => {
+    setActiveTab("profile");
+
+    loadProfile(true);
+};
+
+// default
+setActiveTab("home");
 // SIGNUP/LOGIN/LOGOUT
 document.getElementById('signupBtn').onclick = async () => {
   const username = document.getElementById('signupUsername').value.trim();
