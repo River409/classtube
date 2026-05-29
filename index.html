@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -32,7 +33,12 @@ body::before {
 
     z-index: -2;
 }
-
+.videoTitle {
+  cursor:pointer;
+  color:blue;
+  font-weight:500;
+  margin:3px 0;
+}
 body::after {
     content: "";
     position: fixed;
@@ -97,7 +103,37 @@ body::after {
     height: 62px;
     image-rendering: auto;
 }
+.tabButtons {
+    display:flex;
+    gap:6px;
+    margin-bottom:14px;
+}
 
+.tabButtons button {
+
+    background:#d4d4d4;
+
+    border:1px solid #888;
+
+    border-bottom:none;
+
+    padding:8px 18px;
+
+    font-size:14px;
+
+    font-weight:bold;
+
+    cursor:pointer;
+}
+
+.tabButtons button.active {
+
+    background:#ffffff;
+
+    position:relative;
+
+    top:1px;
+}
 /* =========================================
    MAIN PANELS
 ========================================= */
@@ -953,7 +989,7 @@ body::before {
         transition: none !important;
     }
 }
-}.videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
+.videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
 .videoMeta { color:grey; font-size:12px; margin-bottom:5px; }
 #videoPlayerWrapper { display:flex; gap:20px; }
 #videoPlayerMain { flex:2; }
@@ -1053,6 +1089,10 @@ Contraseña:<br><input type="password" id="loginPassword"><br><br>
 <!-- PROFILE -->
 <div id="profileSection" style="display:none; padding:20px;">
 <div id="profileHeader">
+<div id="profileTabs" class="tabButtons" style="display:none; margin-bottom:15px;">
+  <button id="profileTabBtn" class="active">Profile</button>
+  <button id="uploadTabBtn">Upload</button>
+</div>
   
   <div class="avatar" id="profileAvatar"></div>
 
@@ -1074,15 +1114,46 @@ Contraseña:<br><input type="password" id="loginPassword"><br><br>
 </div><input type="button" value="Grabar Perfil" id="saveBioBtn" style="display:none;"><br>
 <div id="profileStatus"></div><br><br>
 <h3>Videos</h3>
-<div id="userVideos"></div>
+<div id="userVideos" style="
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+"></div>
 
-<div id="uploadSection">
-Titulo:<br><input type="text" id="videoTitle"><br>
-URL de Portada del Video:<br>
-<input type="text" id="videoThumbnail"><br>
-Descripcion:<br><textarea id="videoDescription" rows="3" cols="40"></textarea><br>
-URL de google drive de un video:<br><input type="text" id="videoURL"><br>
-<input type="button" value="Publicar" id="postVideoBtn"><br>
+
+<!-- PROFILE SETTINGS -->
+<div id="profileTabContent">
+
+  <div id="bioContainer" style="display:none;">
+    Bio/Descripción:<br>
+    <textarea id="bio" rows="5" cols="40"></textarea><br>
+  </div>
+
+
+
+  <input type="button" value="Grabar Perfil" id="saveBioBtn" style="display:none;"><br>
+
+</div>
+
+<!-- UPLOAD TAB -->
+<div id="uploadTabContent" style="display:none;">
+
+  <div id="uploadSection">
+    Titulo:<br>
+    <input type="text" id="videoTitle"><br>
+
+    URL de Portada del Video:<br>
+    <input type="text" id="videoThumbnail"><br>
+
+    Descripcion:<br>
+    <textarea id="videoDescription" rows="3" cols="40"></textarea><br>
+
+    URL de google drive de un video:<br>
+    <input type="text" id="videoURL"><br>
+
+    <input type="button" value="Publicar" id="postVideoBtn"><br>
+  </div>
+
 </div>
 </div>
 
@@ -1120,7 +1191,19 @@ URL de google drive de un video:<br><input type="text" id="videoURL"><br>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, collection, getDocs, addDoc, query, orderBy, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  collection,
+  getDocs,
+  addDoc,
+  query,
+  orderBy,
+  getDoc,
+  updateDoc,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyC2QdW6Gq3dnFf2JL4-vET-68M6LvTJUvw",
@@ -1213,129 +1296,74 @@ onAuthStateChanged(auth, async user => {
 
 const homeBtn = document.getElementById("homeBtn");
 const profileBtn = document.getElementById("myProfileBtn");
+const profileTabBtn = document.getElementById("profileTabBtn");
+const uploadTabBtn = document.getElementById("uploadTabBtn");
 
-function setActiveTab(tab){
+profileTabBtn.onclick = () => {
 
-    homeBtn.classList.remove("active");
-    profileBtn.classList.remove("active");
+  profileTabBtn.classList.add("active");
+  uploadTabBtn.classList.remove("active");
 
-    if(tab === "home"){
-        homeBtn.classList.add("active");
-    }
+  // SHOW PROFILE CONTENT
+  document.getElementById("profileHeader").style.display = "flex";
+  document.getElementById("profileTabContent").style.display = "block";
+  document.getElementById("userVideos").style.display = "flex";
 
-    if(tab === "profile"){
-        profileBtn.classList.add("active");
-    }
-}
+  // HIDE UPLOAD
+  document.getElementById("uploadTabContent").style.display = "none";
+};
+// PROFILE TAB
+profileTabBtn.onclick = () => {
 
-// HOME
-document.getElementById("homeBtn").onclick = () => {
-    setActiveTab("home");
+  profileTabBtn.classList.add("active");
+  uploadTabBtn.classList.remove("active");
 
-    showSection("feed");
-    loadVideos();
-    loadUsers();
+  // SHOW PROFILE CONTENT
+  document.getElementById("profileHeader").style.display = "flex";
+  document.getElementById("profileTabContent").style.display = "block";
+  document.getElementById("userVideos").style.display = "flex";
+
+  // SHOW PROFILE SETTINGS
+  document.getElementById("bioContainer").style.display = "block";
+  document.getElementById("profileImageContainer").style.display = "block";
+  document.getElementById("saveBioBtn").style.display = "inline-block";
+
+  // HIDE UPLOAD
+  document.getElementById("uploadTabContent").style.display = "none";
 };
 
-// PROFILE
-document.getElementById("myProfileBtn").onclick = () => {
-    setActiveTab("profile");
+// UPLOAD TAB
+uploadTabBtn.onclick = () => {
 
-    loadProfile(true);
+  uploadTabBtn.classList.add("active");
+  profileTabBtn.classList.remove("active");
+
+  // KEEP HEADER + BUTTONS VISIBLE
+  document.getElementById("profileHeader").style.display = "flex";
+
+  // HIDE PROFILE CONTENT
+  document.getElementById("profileTabContent").style.display = "none";
+  document.getElementById("userVideos").style.display = "none";
+
+  // HIDE PROFILE SETTINGS
+  document.getElementById("bioContainer").style.display = "none";
+  document.getElementById("profileImageContainer").style.display = "none";
+  document.getElementById("saveBioBtn").style.display = "none";
+
+  // SHOW UPLOAD FORM
+  document.getElementById("uploadTabContent").style.display = "block";
 };
-
-// default
-setActiveTab("home");
-// SIGNUP/LOGIN/LOGOUT
-document.getElementById('signupBtn').onclick = async () => {
-  const username = document.getElementById('signupUsername').value.trim();
-  const email = document.getElementById('signupEmail').value.trim();
-  const password = document.getElementById('signupPassword').value;
-
-  if (!username) {
-    status.innerText = "Username required";
-    return;
-  }
-
-  try {
-    // 🔎 CHECK IF USERNAME EXISTS
-    const usersSnap = await getDocs(collection(db, "users"));
-    let exists = false;
-
-    usersSnap.forEach(docSnap => {
-      const data = docSnap.data();
-      if ((data.username || "").toLowerCase() === username.toLowerCase()) {
-        exists = true;
-      }
-    });
-
-    if (exists) {
-      status.innerText = "Username already taken";
-      return;
-    }
-
-    // ✅ CREATE AUTH USER
-    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-
-    // ✅ SAVE USER PROFILE
-    await setDoc(doc(db, "users", userCred.user.uid), {
-      username,
-      email,
-      bio: "",
-      createdAt: new Date()
-    });
-
-    document.getElementById('signupUsername').value = "";
-    document.getElementById('signupEmail').value = "";
-    document.getElementById('signupPassword').value = "";
-
-    status.innerText = "Account created!";
-  } catch (err) {
-    status.innerText = err.message;
-  }
-};
-document.getElementById('loginBtn').onclick = async () => {
-  const loginInput = document.getElementById('loginEmail').value.trim(); 
-  const password = document.getElementById('loginPassword').value;
-
-  try {
-    let emailToUse = loginInput;
-
-    // simple email check
-    const looksLikeEmail = loginInput.includes("@");
-
-    if (!looksLikeEmail) {
-      // treat as username → find email in Firestore
-      const usersSnap = await getDocs(collection(db, "users"));
-
-      let foundEmail = null;
-
-      usersSnap.forEach(docSnap => {
-        const data = docSnap.data();
-        if ((data.username || "").toLowerCase() === loginInput.toLowerCase()) {
-          foundEmail = data.email;
-        }
-      });
-
-      if (!foundEmail) {
-        status.innerText = "Username not found";
-        return;
-      }
-
-      emailToUse = foundEmail;
-    }
-
-    await signInWithEmailAndPassword(auth, emailToUse, password);
-
-  } catch (err) {
-    status.innerText = err.message;
-  }
-};
-document.getElementById("logoutBtn").onclick=async ()=>{ await signOut(auth); showSection("login"); };
-
 // PROFILE BUTTON
-document.getElementById("myProfileBtn").onclick=()=>loadProfile(true);
-document.getElementById("homeBtn").onclick=()=>{ showSection('feed'); loadVideos(); loadUsers(); };
+document.getElementById("homeBtn").onclick = async () => {
+  showSection('feed');
+  await loadVideos();
+  await loadUsers();
+};
+
+document.getElementById("myProfileBtn").onclick = async () => {
+  showSection('profile');
+  await loadProfile();
+};
 
 // SAVE BIO
 document.getElementById('saveBioBtn').onclick = async () => {
@@ -1411,6 +1439,7 @@ async function loadVideos() {
 // LOAD USER VIDEOS
 
 async function loadUserVideos(profileUid) {
+
   if (!profileUid) return;
 
   const snapshot = await getDocs(collection(db, "videos"));
@@ -1419,25 +1448,67 @@ async function loadUserVideos(profileUid) {
   let count = 0;
 
   snapshot.forEach(docSnap => {
+
     const video = docSnap.data();
 
-    // SAFE CHECK
     if (video.userId === profileUid) {
+
       count++;
 
-      const thumb = video.thumbnail || "https://via.placeholder.com/160x90.png?text=Video";
+      const thumb =
+        video.thumbnail ||
+        "https://via.placeholder.com/160x90.png?text=Video";
+
+      const isOwner =
+        currentUser &&
+        currentUser.uid === profileUid;
 
       html += `
-        <div onclick="playVideo('${docSnap.id}')" style="margin-bottom:10px; cursor:pointer;">
-          <img src="${thumb}" width="160" height="90" style="border:1px solid #000; object-fit:cover;">
-          <div class="videoTitle">${video.title || "Untitled"}</div>
+        <div style="
+  width:180px;
+  padding:8px;
+  border:1px solid #aaa;
+  background:#f5f5f5;
+">
+          <div onclick="playVideo('${docSnap.id}')"
+            style="cursor:pointer;">
+
+            <img
+              src="${thumb}"
+              width="160"
+              height="90"
+              style="border:1px solid #000; object-fit:cover;">
+
+            <div class="videoTitle">
+              ${video.title || "Untitled"}
+            </div>
+
+          </div>
+
+          ${
+            isOwner
+              ? `
+                <button
+                  onclick="deleteVideo('${docSnap.id}')"
+                  style="
+                    margin-top:8px;
+                    background:#c62828;
+                    color:white;
+                  ">
+                  Delete Video
+                </button>
+              `
+              : ""
+          }
+
         </div>
       `;
     }
   });
 
   if (count === 0) {
-    html = "<p style='color:gray;'>No ha subido ningún video todavía</p>";
+    html =
+      "<p style='color:gray;'>No ha subido ningún video todavía</p>";
   }
 
   document.getElementById('userVideos').innerHTML = html;
@@ -1587,6 +1658,30 @@ document.getElementById('postVideoBtn').onclick=async ()=>{
   await loadVideos(); alert("Video uploaded!");
 };
 
+// DELETE VIDEO
+window.deleteVideo = async function(videoId){
+
+  const confirmDelete =
+    confirm("Delete this video?");
+
+  if (!confirmDelete) return;
+
+  try {
+
+    await deleteDoc(doc(db, "videos", videoId));
+
+    await loadUserVideos(currentUser.uid);
+    await loadVideos();
+
+    alert("Video deleted!");
+
+  } catch(err){
+
+    alert(err.message);
+
+  }
+};
+
 // SHOW PROFILE BY UID
 
 window.showUserProfile = async function(uid){
@@ -1607,19 +1702,20 @@ window.showUserProfileByName=async function(username){
 // LOAD PROFILE
 
 
-async function loadProfile(fromButton=false){
+async function loadProfile(){
+
   if(!currentUser) return;
 
-  const docSnap = await getDoc(doc(db,"users",currentUser.uid));
+  const docSnap =
+    await getDoc(doc(db,"users",currentUser.uid));
+
   if(!docSnap.exists()) return;
 
-  const data = docSnap.data();
-
-  if(fromButton) showSection('profile');
-
-  renderProfileUI(data, currentUser.uid);
+  renderProfileUI(
+    docSnap.data(),
+    currentUser.uid
+  );
 }
-
 function renderProfileUI(data, uid){  // username
   document.getElementById('profileUsername').innerText = data.username || "";
 
@@ -1643,6 +1739,7 @@ document.getElementById('profileJoinDate').innerText =
     day: 'numeric'
   });
 
+
   // avatar (CLEAR FIRST — THIS FIXES YOUR BUG)
 const avatarEl = document.getElementById('profileAvatar');
 
@@ -1651,14 +1748,34 @@ avatarEl.style.backgroundImage =
 
   // permissions (ONLY for current user)
 const isMe = uid === currentUser.uid;
+document.getElementById("profileTabs").style.display =
+  isMe ? "flex" : "none";
+document.getElementById("profileTabContent").style.display = "block";
+document.getElementById("uploadTabContent").style.display = "none";
 
+profileTabBtn.classList.add("active");
+uploadTabBtn.classList.remove("active");
+
+// PROFILE TAB CONTENT
+// PROFILE TAB CONTENT
 document.getElementById('profileImageContainer').style.display =
   isMe ? "block" : "none";
-document.getElementById('bioContainer').style.display = isMe ? "block" : "none";
-document.getElementById('saveBioBtn').style.display = isMe ? "inline-block" : "none";
-document.getElementById('bio').readOnly = !isMe;
-document.getElementById('uploadSection').style.display = isMe ? "block" : "none";
 
+document.getElementById('bioContainer').style.display =
+  isMe ? "block" : "none";
+
+document.getElementById('saveBioBtn').style.display =
+  isMe ? "inline-block" : "none";
+
+// UPLOAD TAB CONTENT
+document.getElementById('uploadTabContent').style.display =
+  "none";
+document.getElementById('saveBioBtn').style.display =
+  isMe ? "inline-block" : "none";
+
+// UPLOAD TAB CONTENT
+document.getElementById('uploadTabContent').style.display =
+  "none";
   loadUserVideos(uid);
 }
 function getUserPfp(data){
