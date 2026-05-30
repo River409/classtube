@@ -1,6 +1,4 @@
-
-
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1043,7 +1041,7 @@ Contraseña:<br><input type="password" id="signupPassword"><br><br>
 <input type="button" value="Crear Cuenta" id="signupBtn"><br><br>
 
 <b>Iniciar Sesión</b><br><br>
-Email o nombre de usuario:<br><input type="email" id="loginEmail"><br><br>
+Email: <br><input type="email" id="loginEmail"><br><br>
 Contraseña:<br><input type="password" id="loginPassword"><br><br>
 <input type="button" value="Entrar" id="loginBtn"><br><br>
 
@@ -1091,8 +1089,8 @@ Contraseña:<br><input type="password" id="loginPassword"><br><br>
 <div id="profileSection" style="display:none; padding:20px;">
 <div id="profileHeader">
 <div id="profileTabs" class="tabButtons" style="display:none; margin-bottom:15px;">
-  <button id="profileTabBtn" class="active">Profile</button>
-  <button id="uploadTabBtn">Upload</button>
+  <button id="profileTabBtn" class="active">Perfil</button>
+  <button id="uploadTabBtn">Subir</button>
 </div>
   
   <div class="avatar" id="profileAvatar"></div>
@@ -1411,6 +1409,71 @@ async function loadUsers() {
 
   document.getElementById('userList').innerHTML = html;
 }
+// LOGIN
+document.getElementById("loginBtn").onclick = async () => {
+  const email =
+    document.getElementById("loginEmail").value.trim();
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  try {
+    await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    status.innerText = "Logged in!";
+  } catch (err) {
+    status.innerText = err.message;
+  }
+};
+// CREATE ACCOUNT
+document.getElementById("signupBtn").onclick = async () => {
+
+  const username =
+    document.getElementById("signupUsername").value.trim();
+
+  const email =
+    document.getElementById("signupEmail").value.trim();
+
+  const password =
+    document.getElementById("signupPassword").value;
+
+  const birthdate =
+    document.getElementById("signupBirthdate").value;
+
+  try {
+
+    const cred =
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    await setDoc(
+      doc(db, "users", cred.user.uid),
+      {
+        username,
+        email,
+        birthdate,
+        createdAt: new Date(),
+        bio: "",
+        profileImage: ""
+      }
+    );
+
+    status.innerText = "Cuenta creada.";
+
+  } catch (err) {
+
+    status.innerText = err.message;
+
+  }
+};
+
 // LOAD VIDEOS (10 RANDOM) — using stored thumbnails
 async function loadVideos() {
   const snapshot = await getDocs(collection(db, "videos"));
