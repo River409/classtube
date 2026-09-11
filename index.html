@@ -1,993 +1,1329 @@
+
 <!doctype html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Classtube</title>
 <style>
-html,
-body {
-    margin: 0;
-    padding: 0;
-    font-family: Verdana, Arial, sans-serif;
-    font-size: 12px;
-    color: #1f2a1d;
-    background: #a4b59b;
-}
-
-/* =========================================
-   BACKGROUND
-========================================= */
-
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-
-    background:
-        linear-gradient(
-            to bottom,
-            #c8d5c1 0%,
-            #a5b69d 100%
-        );
-
-    z-index: -2;
-}
-.videoTitle {
-  cursor:pointer;
-  color:blue;
-  font-weight:500;
-  margin:3px 0;
-}
-body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-
-    background-image:
-        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-
-    background-size: 6px 6px;
-
-    opacity: 0.08;
-
-    z-index: -1;
-}
-
-/* =========================================
-   GLOBAL
-========================================= */
+/* =========================================================
+   CLASSTUBE
+   REFINED 2014–2019 SOCIAL VIDEO STYLE
+   GREEN EDITION
+   ========================================================= */
 
 * {
     box-sizing: border-box;
 }
 
-/* =========================================
-   HEADER
-========================================= */
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
 
-#headerTable {
-    width: 100%;
+html {
+    background: #e8ece9;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+
+    color: #4a4f4c;
 
     background:
         linear-gradient(
             to bottom,
-            #89a67a 0%,
-            #6f8d61 100%
+            #f7f9f8 0,
+            #eef2ef 180px,
+            #e7ebe8 100%
+        );
+}
+
+/* =========================================================
+   COLORS
+   =========================================================
+
+   Primary Green:     #318653
+   Dark Green:        #246b42
+   Light Green:       #edf7f0
+   Link Green:        #2e8b57
+   Border:            #d5dbd7
+   Background:        #edf0ee
+*/
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a {
+    color: #2e8b57;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #236b43;
+    text-decoration: underline;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+#headerTable {
+    width: 100%;
+    border-collapse: collapse;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #3b9860 0,
+            #318653 55%,
+            #2d7d4e 100%
         );
 
-    border-bottom: 2px solid #43553b;
-
-    padding: 10px 14px;
+    border-bottom: 1px solid #21643d;
 
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.2),
-        0 2px 6px rgba(0,0,0,0.15);
+        0 1px 4px rgba(0, 0, 0, .22);
 }
+
+#headerTable td {
+    padding: 8px 15px;
+}
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+#logoImg {
+    height: 60px;
+    max-width: 250px;
+
+    object-fit: contain;
+
+    vertical-align: middle;
+}
+
+/* =========================================================
+   USER AREA
+   ========================================================= */
+
+#userProfile {
+    position: absolute;
+
+    top: 10px;
+    right: 15px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    color: #fff;
+
+    font-size: 12px;
+}
+
+#userProfile a {
+    color: #fff;
+}
+
+#userAvatar {
+    width: 32px !important;
+    height: 32px !important;
+
+    border: 1px solid rgba(255, 255, 255, .8) !important;
+    border-radius: 3px !important;
+
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, .18);
+}
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
 
 #headerLinks {
     float: right;
-    margin-top: 18px;
+    margin-top: 16px;
 }
 
 #headerLinks a {
-    margin-left: 5px;
+    display: inline-block;
+
+    margin-left: 3px;
+    padding: 6px 10px;
+
+    color: #fff;
+
+    background: rgba(0, 0, 0, .08);
+
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 3px;
+
+    font-size: 12px;
+
+    text-decoration: none;
+
+    transition:
+        background .12s ease,
+        border-color .12s ease;
 }
 
-/* =========================================
-   LOGO
-========================================= */
+#headerLinks a:hover {
+    background: rgba(0, 0, 0, .17);
 
-#logoImg {
-    height: 62px;
-    image-rendering: auto;
-}
-.tabButtons {
-    display:flex;
-    gap:6px;
-    margin-bottom:14px;
+    border-color: rgba(255, 255, 255, .16);
+
+    text-decoration: none;
 }
 
-.tabButtons button {
-
-    background:#d4d4d4;
-
-    border:1px solid #888;
-
-    border-bottom:none;
-
-    padding:8px 18px;
-
-    font-size:14px;
-
-    font-weight:bold;
-
-    cursor:pointer;
-}
-
-.tabButtons button.active {
-
-    background:#ffffff;
-
-    position:relative;
-
-    top:1px;
-}
-/* =========================================
+/* =========================================================
    MAIN PANELS
-========================================= */
+   ========================================================= */
 
 #feedSection,
 #profileSection,
 #videoPlayerSection,
 #loginSection {
-
     width: 1000px;
+    max-width: calc(100% - 30px);
 
     margin: 20px auto;
+    padding: 20px;
 
-    background: #edf3e8;
+    background: #fff;
 
-    border: 1px solid #8ea184;
-
+    border: 1px solid #d3d9d5;
     border-radius: 4px;
 
     box-shadow:
-        0 1px 3px rgba(0,0,0,0.15);
-
-    padding: 18px;
+        0 1px 2px rgba(0, 0, 0, .05),
+        0 3px 8px rgba(0, 0, 0, .06);
 }
 
-/* =========================================
-   LINKS
-========================================= */
+/* =========================================================
+   LOGIN
+   ========================================================= */
 
-a {
-    color: #2d5c8a;
-    text-decoration: none;
+#loginSection {
+    width: 370px;
+    max-width: calc(100% - 25px);
+
+    padding: 20px;
 }
 
-a:hover {
-    text-decoration: underline;
-}
-.videoContainer {
-    position: relative;
-    display: inline-block;
-}
+#loginSection h2 {
+    margin: -20px -20px 20px;
 
-#playerIframe {
-    position: relative;
-    z-index: 1;
-}
+    padding: 13px 15px;
 
-#watermark {
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    width: 140px; /* adjust as needed */
-    opacity: 0.5;
-    z-index: 9999;
-    pointer-events: none;
-}
-/* =========================================
-   BUTTONS
-========================================= */
-
-button,
-input[type="button"],
-#headerLinks a,
-.tabButtons button {
+    color: #fff;
 
     background:
         linear-gradient(
             to bottom,
-            #efefef,
-            #d7d7d7
+            #3b9860,
+            #318653
         );
 
-    border: 1px solid #8a8a8a;
+    border-radius: 4px 4px 0 0;
 
+    font-size: 17px;
+    font-weight: normal;
+}
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+h1,
+h2,
+h3 {
+    color: #3f4542;
+    font-weight: normal;
+}
+
+h3 {
+    margin: 10px 0 12px;
+    padding-bottom: 8px;
+
+    border-bottom: 1px solid #dfe3e0;
+
+    font-size: 18px;
+}
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+#searchContainer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    margin-bottom: 18px;
+    padding: 9px;
+
+    background: #f4f6f5;
+
+    border: 1px solid #d8ddda;
+    border-radius: 3px;
+}
+
+#searchInput {
+    width: 50% !important;
+
+    height: 34px;
+
+    padding: 7px 10px;
+
+    background: #fff;
+
+    border: 1px solid #b8bfbb;
     border-radius: 3px;
 
-    color: #2d2d2d;
+    color: #444;
 
-    font-size: 12px;
-
-    font-weight: bold;
-
-    padding: 6px 12px;
-
-    text-shadow:
-        0 1px 0 rgba(255,255,255,0.5);
+    font-size: 13px;
 
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.7);
+        inset 0 1px 2px rgba(0, 0, 0, .07);
+
+    transition:
+        border-color .12s ease,
+        box-shadow .12s ease;
+}
+
+#searchInput:focus {
+    outline: none;
+
+    border-color: #4e9c6c;
+
+    box-shadow:
+        0 0 0 2px rgba(49, 134, 83, .10);
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button,
+input[type="button"],
+input[type="submit"] {
+    width: auto !important;
+    min-width: 0 !important;
+
+    display: inline-block;
+
+    height: 30px;
+    min-height: 30px;
+
+    margin: 0;
+
+    padding: 5px 11px;
+
+    border: 1px solid #b9bfbc;
+    border-radius: 3px;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #fff 0,
+            #f3f3f3 100%
+        );
+
+    color: #444;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: normal;
+
+    line-height: 18px;
+
+    white-space: nowrap;
+
+    vertical-align: middle;
+
+    flex: 0 0 auto;
+
+    box-shadow:
+        0 1px 1px rgba(0, 0, 0, .07);
 
     cursor: pointer;
+
+    transition:
+        background .12s ease,
+        border-color .12s ease,
+        box-shadow .12s ease;
 }
 
 button:hover,
 input[type="button"]:hover,
-#headerLinks a:hover,
-.tabButtons button:hover {
-
+input[type="submit"]:hover {
     background:
         linear-gradient(
             to bottom,
-            #f5f5f5,
-            #dcdcdc
+            #fff 0,
+            #e9ebe9 100%
         );
 
+    border-color: #969d99;
+
     box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.8),
-        0 1px 2px rgba(0,0,0,0.15);
+        0 1px 2px rgba(0, 0, 0, .10);
 }
 
 button:active,
 input[type="button"]:active,
-#headerLinks a:active,
-.tabButtons button:active {
-
-    background: #cfcfcf;
+input[type="submit"]:active {
+    background: #e1e4e2;
 
     box-shadow:
-        inset 0 1px 3px rgba(0,0,0,0.2);
+        inset 0 1px 2px rgba(0, 0, 0, .12);
 }
 
-/* =========================================
+/* =========================================================
+   PRIMARY / GREEN BUTTON
+   ========================================================= */
+
+#likeBtn {
+    color: #fff;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #62b478 0,
+            #3f975d 100%
+        );
+
+    border-color: #337d4d;
+
+    text-shadow:
+        0 1px 1px rgba(0, 0, 0, .16);
+}
+
+#likeBtn:hover {
+    background:
+        linear-gradient(
+            to bottom,
+            #6ec383 0,
+            #479f65 100%
+        );
+
+    border-color: #2d7045;
+}
+
+#likeBtn:active {
+    background: #347f4e;
+}
+
+/* =========================================================
    TABS
-========================================= */
+   ========================================================= */
 
 .tabButtons {
-    margin-bottom: 12px;
-    border-bottom: 1px solid #9baa94;
-    padding-bottom: 6px;
+    display: flex;
+    align-items: flex-end;
+
+    gap: 3px;
+
+    margin-bottom: 15px;
+
+    border-bottom: 1px solid #cbd1ce;
 }
 
 .tabButtons button {
-    margin-right: 4px;
+    position: relative;
+
+    height: 32px;
+
+    padding: 6px 13px;
+
+    border: 1px solid #c8cecb;
+    border-bottom: 0;
+
+    border-radius: 4px 4px 0 0;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #f8f8f8,
+            #e9eaea
+        );
+
+    color: #555;
+}
+
+.tabButtons button:hover {
+    background:
+        linear-gradient(
+            to bottom,
+            #fff,
+            #f1f2f2
+        );
 }
 
 .tabButtons button.active {
-    background: #ffffff;
+    top: 1px;
+
+    background: #fff;
+
+    color: #2e8b57;
+
+    border-color: #c8cecb;
+
+    border-bottom: 1px solid #fff;
+
+    font-weight: bold;
 }
 
-/* =========================================
-   INPUTS
-========================================= */
-
-input,
-textarea {
-
-    background: #ffffff;
-
-    border: 1px solid #93a58a;
-
-    border-radius: 2px;
-
-    padding: 6px;
-
-    font-size: 12px;
-
-    color: #222;
-
-    box-shadow:
-        inset 0 1px 2px rgba(0,0,0,0.08);
-}
-
-input:focus,
-textarea:focus {
-
-    outline: none;
-
-    border-color: #617b55;
-}
-
-/* =========================================
+/* =========================================================
    VIDEO GRID
-========================================= */
+   ========================================================= */
 
 #homeThumbnails {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 14px;
+
+    padding-top: 5px;
+    margin-bottom: 20px;
 }
 
-#homeThumbnails div {
+#homeThumbnails > div {
+    width: auto;
 
-    width: 160px;
+    padding: 7px;
 
-    background: #f4f8f1;
+    background: #fff;
 
-    border: 1px solid #5e7058;
-
+    border: 1px solid #d6dbd8;
     border-radius: 3px;
 
-    padding: 5px;
-
     box-shadow:
-        0 1px 3px rgba(0,0,0,0.12);
+        0 1px 2px rgba(0, 0, 0, .07);
 
     cursor: pointer;
+
+    transition:
+        transform .12s ease,
+        border-color .12s ease,
+        box-shadow .12s ease;
 }
 
-#homeThumbnails div:hover {
+#homeThumbnails > div:hover {
+    transform: translateY(-2px);
 
-    border-color: #4f6249;
+    border-color: #aec3b5;
 
-    background: #ffffff;
+    box-shadow:
+        0 4px 9px rgba(0, 0, 0, .12);
 }
 
 #homeThumbnails img {
+    display: block;
 
     width: 100%;
-    height: 90px;
+    height: auto;
+
+    aspect-ratio: 16 / 9;
 
     object-fit: cover;
 
-    border: 1px solid #444;
+    background: #e9ecea;
+
+    border: 1px solid #bbc2be;
+    border-radius: 2px;
 }
 
-/* =========================================
+/* =========================================================
    VIDEO TEXT
-========================================= */
+   ========================================================= */
 
 .videoTitle {
+    margin: 7px 2px 3px;
 
-    margin-top: 5px;
-
-    color: #1e4f80;
-
-    font-weight: bold;
+    color: #2e8b57;
 
     font-size: 12px;
+    font-weight: bold;
+
+    line-height: 1.35;
 
     cursor: pointer;
 }
 
-.videoMeta {
+.videoTitle:hover {
+    color: #236b43;
 
-    color: #666;
+    text-decoration: underline;
+}
+
+.videoMeta {
+    color: #888;
 
     font-size: 11px;
 }
 
-/* =========================================
-   USER ROWS
-========================================= */
+/* =========================================================
+   PEOPLE
+   ========================================================= */
 
 .userRow {
-
     display: flex;
     align-items: center;
-    gap: 8px;
 
-    padding: 6px;
+    gap: 10px;
 
-    border-bottom: 1px solid #d2ddd0;
+    padding: 9px;
+
+    border-bottom: 1px solid #e7eae8;
 
     cursor: pointer;
+
+    transition:
+        background .12s ease;
 }
 
 .userRow:hover {
-
-    background: #f7fbf5;
+    background: #f0f7f2;
 }
 
-/* =========================================
+.userName {
+    color: #2e8b57;
+
+    font-size: 13px;
+}
+
+.userName:hover {
+    color: #236b43;
+
+    text-decoration: underline;
+}
+
+/* =========================================================
    AVATARS
-========================================= */
+   ========================================================= */
 
 .avatar {
-
     width: 42px;
     height: 42px;
+
+    flex-shrink: 0;
 
     background-size: cover;
     background-position: center;
 
-    border: 1px solid #666;
+    background-color: #e8ece9;
 
-    border-radius: 2px;
+    border: 1px solid #adb5b0;
+    border-radius: 3px;
+
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, .13);
+}
+
+.avatar:hover {
+    box-shadow:
+        0 2px 5px rgba(0, 0, 0, .17);
 }
 
 #profileHeader .avatar {
-
     width: 90px;
     height: 90px;
 }
 
-/* =========================================
-   PROFILE HEADER
-========================================= */
+/* =========================================================
+   PROFILE
+   ========================================================= */
 
 #profileHeader {
-
     display: flex;
-    align-items: center;
-    gap: 14px;
+    align-items: flex-start;
 
-    padding-bottom: 12px;
-
-    margin-bottom: 14px;
-
-    border-bottom: 1px solid #c4d0bf;
-}
-
-#profileUsername {
-
-    font-size: 22px;
-
-    font-weight: bold;
-
-    color: #2d3d2a;
-}
-
-/* =========================================
-   PLAYER
-========================================= */
-
-#videoPlayerWrapper {
-
-    display: flex;
-
-    gap: 20px;
-}
-
-#videoPlayerMain {
-
-    flex: 2;
-}
-
-#playerIframe {
-
-    border: 1px solid #444;
-
-    background: black;
-}
-
-#otherVideos {
-
-    flex: 1;
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 10px;
-}
-
-#otherVideos div {
-
-    padding: 5px;
-
-    border: 1px solid #b7c5b0;
-
-    background: #f7faf5;
-
-    cursor: pointer;
-}
-
-#otherVideos div:hover {
-
-    background: #ffffff;
-}
-
-/* =========================================
-   LIKE BUTTONS
-========================================= */
-
-#likeBtn {
-
-    background:
-        linear-gradient(
-            to bottom,
-            #8cc57f,
-            #5e9b51
-        );
-
-    border: 1px solid #456f3b;
-
-    color: white;
-}
-
-#dislikeBtn {
-
-    background:
-        linear-gradient(
-            to bottom,
-            #dcdcdc,
-            #b7b7b7
-        );
-
-    border: 1px solid #888;
-
-    color: #222;
-}
-
-/* =========================================
-   WHATS NEW
-========================================= */
-
-#whatsNewPanel {
-
-    background: #f5faf2;
-
-    border: 1px solid #97aa8f;
-
-    padding: 10px;
-}
-
-.whatsNewHeader {
-
-    background:
-        linear-gradient(
-            to bottom,
-            #92b683,
-            #6e8e61
-        );
-
-    border: 1px solid #4d6245;
-
-    color: white;
-
-    font-weight: bold;
-
-    padding: 6px 8px;
-
-    margin-bottom: 10px;
-}
-
-/* =========================================
-   FOOTER
-========================================= */
-
-#footer {
-
-    margin-top: 40px;
+    gap: 15px;
 
     padding: 12px;
 
-    text-align: center;
+    margin-bottom: 18px;
 
-    background: #dfe8d8;
+    background:
+        linear-gradient(
+            to bottom,
+            #f7f8f7,
+            #f1f4f2
+        );
 
-    border-top: 1px solid #93a58a;
-
-    color: #556050;
+    border: 1px solid #d7dcd9;
+    border-radius: 3px;
 }
 
-/* =========================================
-   WATERMARK
-========================================= */
+#profileUsername {
+    color: #333;
+
+    font-size: 22px;
+    font-weight: normal;
+}
+
+#profileBio {
+    margin-top: 6px;
+
+    color: #666;
+
+    line-height: 1.45;
+}
+
+#profileJoinDate {
+    margin-top: 7px;
+
+    color: #999;
+
+    font-size: 11px;
+}
+
+/* =========================================================
+   PROFILE VIDEOS
+   ========================================================= */
+
+#userVideos {
+    display: grid !important;
+
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+
+    gap: 14px !important;
+}
+
+#userVideos > div {
+    width: auto !important;
+
+    padding: 7px !important;
+
+    background: #fff !important;
+
+    border: 1px solid #d6dbd8 !important;
+    border-radius: 3px;
+
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, .07);
+
+    transition:
+        border-color .12s ease,
+        box-shadow .12s ease;
+}
+
+#userVideos > div:hover {
+    border-color: #aec3b5 !important;
+
+    box-shadow:
+        0 3px 7px rgba(0, 0, 0, .11);
+}
+
+#userVideos img {
+    width: 100% !important;
+    height: auto !important;
+
+    aspect-ratio: 16 / 9;
+
+    object-fit: cover;
+
+    border: 1px solid #bbc2be;
+}
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+input,
+textarea {
+    max-width: 100%;
+
+    padding: 7px 9px;
+
+    background: #fff;
+
+    border: 1px solid #b9bfbc;
+    border-radius: 3px;
+
+    color: #444;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    font-size: 13px;
+
+    box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, .06);
+}
+
+input:focus,
+textarea:focus {
+    outline: none;
+
+    border-color: #4e9c6c;
+
+    box-shadow:
+        0 0 0 2px rgba(49, 134, 83, .10);
+}
+
+/* =========================================================
+   UPLOAD
+   ========================================================= */
+
+#uploadTabContent {
+    padding: 15px;
+
+    background: #f5f7f6;
+
+    border: 1px solid #d8ddda;
+    border-radius: 3px;
+}
+
+#uploadTabContent input[type="text"],
+#uploadTabContent textarea {
+    width: 100%;
+    max-width: 600px;
+
+    margin-top: 4px;
+    margin-bottom: 12px;
+}
+
+/* =========================================================
+   VIDEO PLAYER
+   ========================================================= */
+
+#videoPlayerWrapper {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 18px;
+}
+
+#videoPlayerMain {
+    flex: 2;
+    min-width: 0;
+}
+
+#playerTitle {
+    margin-top: 0;
+
+    padding: 9px 0;
+
+    color: #333;
+
+    font-size: 19px;
+    font-weight: normal;
+
+    border-bottom: 1px solid #dfe3e0;
+}
+
+.videoContainer {
+    position: relative;
+
+    width: 100%;
+}
+
+#playerIframe {
+    display: block;
+
+    width: 100%;
+    max-width: 640px;
+
+    height: 360px;
+
+    background: #000;
+
+    border: 1px solid #292929;
+
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, .20);
+}
 
 #watermark {
+    position: absolute;
 
-    opacity: 0.5;
+    top: 10px;
+    right: 10px;
+
+    width: 110px;
+
+    opacity: .45;
+
+    pointer-events: none;
 }
 
-/* =========================================
-   TABLES
-========================================= */
+/* =========================================================
+   PLAYER SIDEBAR
+   ========================================================= */
 
-table {
+#otherVideos {
+    flex: 1;
 
-    border-collapse: collapse;
+    min-width: 210px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+
+    max-height: 430px;
+
+    overflow-y: auto;
+
+    padding: 5px;
 }
 
-/* =========================================
+#otherVideos > div {
+    padding: 6px;
+
+    background: #f6f7f6;
+
+    border: 1px solid #d6dbd8;
+    border-radius: 3px;
+
+    cursor: pointer;
+
+    transition:
+        background .12s ease,
+        border-color .12s ease;
+}
+
+#otherVideos > div:hover {
+    background: #edf6f0;
+
+    border-color: #b6cbbd;
+}
+
+#otherVideos img {
+    display: block;
+
+    width: 100%;
+    height: auto;
+
+    aspect-ratio: 16 / 9;
+
+    object-fit: cover;
+
+    border: 1px solid #adb5b0;
+}
+
+/* =========================================================
+   LIKE BAR
+   ========================================================= */
+
+#likeBar {
+    display: flex;
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 5px;
+
+    padding: 8px;
+
+    margin-top: 10px;
+
+    background: #f3f5f4;
+
+    border: 1px solid #d8ddda;
+    border-radius: 3px;
+}
+
+#dislikeBtn {
+    background:
+        linear-gradient(
+            to bottom,
+            #fff,
+            #e8e9e9
+        );
+}
+
+/* =========================================================
+   WHAT'S NEW
+   ========================================================= */
+
+.whatsNewHeader {
+    padding: 8px 10px;
+
+    margin-bottom: 0;
+
+    background:
+        linear-gradient(
+            to bottom,
+            #419b63,
+            #348a55
+        );
+
+    color: #fff;
+
+    border: 1px solid #2c7548;
+    border-radius: 3px 3px 0 0;
+
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.updatePost {
+    padding: 9px 10px;
+
+    background: #f8f9f8;
+
+    border-left: 1px solid #d8ddda;
+    border-right: 1px solid #d8ddda;
+    border-bottom: 1px solid #d8ddda;
+}
+
+.updateMeta {
+    margin: 2px 0 4px;
+
+    color: #999;
+
+    font-size: 10px;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+#footer {
+    width: 1000px;
+    max-width: calc(100% - 30px);
+
+    margin: 30px auto 0;
+
+    padding: 15px;
+
+    text-align: center;
+
+    background: #e0e5e2;
+
+    border-top: 1px solid #c7ceca;
+
+    color: #777;
+
+    font-size: 11px;
+}
+
+#footer a {
+    color: #2e8b57;
+}
+
+/* =========================================================
    MOBILE
-========================================= */
+   ========================================================= */
 
 @media (max-width: 768px) {
+
+    body {
+        font-size: 12px;
+    }
+
+    /* HEADER */
+
+    #headerTable td {
+        padding: 6px 8px;
+    }
+
+    #logoImg {
+        height: 45px !important;
+        max-width: 170px;
+    }
+
+    #userProfile {
+        position: static !important;
+
+        float: right;
+
+        margin-top: 3px;
+
+        font-size: 10px;
+    }
+
+    #userAvatar {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    #headerLinks {
+        float: none;
+
+        clear: both;
+
+        margin-top: 5px;
+        padding-top: 5px;
+
+        border-top: 1px solid rgba(255, 255, 255, .18);
+
+        white-space: nowrap;
+        overflow-x: auto;
+    }
+
+    #headerLinks a {
+        margin: 0 7px 0 0;
+
+        padding: 5px 7px;
+
+        font-size: 10px;
+    }
+
+    /* MAIN */
 
     #feedSection,
     #profileSection,
     #videoPlayerSection,
     #loginSection {
-
         width: 100%;
+        max-width: none;
 
-        margin: 0;
+        margin: 8px 0;
+        padding: 12px;
+
+        border-left: 0;
+        border-right: 0;
 
         border-radius: 0;
+
+        box-shadow:
+            0 1px 3px rgba(0, 0, 0, .07);
     }
 
-    #videoPlayerWrapper {
+    /* SEARCH */
 
+    #searchContainer {
+        display: flex;
         flex-direction: column;
+        align-items: stretch;
+
+        padding: 7px;
     }
+
+    #searchInput {
+        width: 100% !important;
+
+        height: 38px;
+    }
+
+    #searchContainer button {
+        align-self: flex-start;
+    }
+
+    /* TABS */
+
+    .tabButtons {
+        overflow-x: auto;
+
+        white-space: nowrap;
+
+        scrollbar-width: none;
+    }
+
+    .tabButtons::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tabButtons button {
+        flex-shrink: 0;
+
+        padding: 7px 12px;
+    }
+
+    /* VIDEO GRID */
 
     #homeThumbnails {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
 
-        justify-content: center;
+        gap: 9px;
+    }
+
+    #homeThumbnails > div {
+        padding: 5px;
+    }
+
+    .videoTitle {
+        font-size: 10px;
+        line-height: 1.3;
+    }
+
+    /* PROFILE */
+
+    #profileHeader {
+        padding: 9px;
+        gap: 10px;
+    }
+
+    #profileHeader .avatar {
+        width: 70px;
+        height: 70px;
+    }
+
+    #profileUsername {
+        font-size: 18px;
+    }
+
+    /* PROFILE VIDEOS */
+
+    #userVideos {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 9px !important;
+    }
+
+    /* PLAYER */
+
+    #videoPlayerWrapper {
+        display: block;
+    }
+
+    #playerTitle {
+        font-size: 17px;
     }
 
     #playerIframe {
-
         width: 100%;
+        max-width: none;
+
         height: auto;
-    }
-}
-/* =========================================
-   GLOBAL SMOOTHNESS
-========================================= */
 
-* {
-    transition:
-        background-color 160ms ease,
-        border-color 160ms ease,
-        color 160ms ease,
-        box-shadow 180ms ease,
-        transform 180ms cubic-bezier(.2,.8,.2,1),
-        opacity 180ms ease;
-}
-
-/* =========================================
-   PAGE ENTER
-========================================= */
-
-#feedSection,
-#profileSection,
-#videoPlayerSection,
-#loginSection {
-
-    animation:
-        pageEnter 320ms cubic-bezier(.2,.8,.2,1);
-}
-
-@keyframes pageEnter {
-
-    from {
-        opacity: 0;
-        transform: translateY(14px);
+        aspect-ratio: 16 / 9;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+    #watermark {
+        width: 80px;
 
-/* =========================================
-   BUTTONS
-========================================= */
-
-button,
-input[type="button"],
-#headerLinks a,
-.tabButtons button {
-
-    position: relative;
-    overflow: hidden;
-}
-
-button:hover,
-input[type="button"]:hover,
-#headerLinks a:hover,
-.tabButtons button:hover {
-
-    transform:
-        translateY(-2px);
-
-    box-shadow:
-        0 4px 12px rgba(0,0,0,0.15);
-}
-
-button:active,
-input[type="button"]:active,
-#headerLinks a:active,
-.tabButtons button:active {
-
-    transform:
-        scale(0.97);
-}
-
-/* ripple */
-
-button::after,
-input[type="button"]::after,
-#headerLinks a::after,
-.tabButtons button::after {
-
-    content: "";
-
-    position: absolute;
-
-    inset: 0;
-
-    background:
-        linear-gradient(
-            120deg,
-            transparent,
-            rgba(255,255,255,0.25),
-            transparent
-        );
-
-    transform: translateX(-120%);
-
-    transition:
-        transform 500ms ease;
-
-    pointer-events: none;
-}
-
-button:hover::after,
-input[type="button"]:hover::after,
-#headerLinks a:hover::after,
-.tabButtons button:hover::after {
-
-    transform: translateX(120%);
-}
-
-/* =========================================
-   VIDEO CARDS
-========================================= */
-
-#homeThumbnails div {
-
-    transform-origin: center;
-
-    animation:
-        thumbIn 260ms cubic-bezier(.2,.8,.2,1);
-}
-
-@keyframes thumbIn {
-
-    from {
-        opacity: 0;
-        transform:
-            translateY(10px)
-            scale(0.96);
+        top: 7px;
+        right: 7px;
     }
 
-    to {
-        opacity: 1;
-        transform:
-            translateY(0)
-            scale(1);
+    /* RECOMMENDATIONS */
+
+    #otherVideos {
+        display: grid;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 8px;
+
+        max-height: none;
+
+        margin-top: 12px;
+        padding: 0;
+    }
+
+    #otherVideos > div {
+        width: 100%;
+    }
+
+    /* LIKE BAR */
+
+    #likeBar {
+        align-items: center;
+    }
+
+    #likeCount {
+        width: 100%;
+
+        margin-left: 0 !important;
+    }
+
+    /* UPLOAD */
+
+    #uploadTabContent {
+        padding: 10px;
+    }
+
+    #uploadTabContent input,
+    #uploadTabContent textarea {
+        width: 100%;
+    }
+
+    /* BUTTONS */
+
+    button,
+    input[type="button"],
+    input[type="submit"] {
+        height: 34px;
+        min-height: 34px;
+
+        padding: 6px 11px;
+    }
+
+    /* FOOTER */
+
+    #footer {
+        width: 100%;
+        max-width: none;
+
+        margin-top: 10px;
+
+        padding: 12px 8px;
     }
 }
 
-#homeThumbnails div:hover {
+/* =========================================================
+   SMALL PHONES
+   ========================================================= */
 
-    transform:
-        translateY(-6px)
-        scale(1.015);
+@media (max-width: 420px) {
 
-    box-shadow:
-        0 10px 24px rgba(0,0,0,0.18);
-}
-
-#homeThumbnails div:active {
-
-    transform:
-        scale(0.985);
-}
-
-/* =========================================
-   IMAGES
-========================================= */
-
-#homeThumbnails img,
-#otherVideos img {
-
-    animation:
-        imageLoad 500ms ease;
-}
-
-@keyframes imageLoad {
-
-    from {
-        opacity: 0;
-        transform: scale(1.03);
-        filter: blur(3px);
+    #homeThumbnails,
+    #userVideos,
+    #otherVideos {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
     }
 
-    to {
-        opacity: 1;
-        transform: scale(1);
-        filter: blur(0);
+    #feedSection,
+    #profileSection,
+    #videoPlayerSection {
+        padding: 9px;
+    }
+
+    #profileHeader .avatar {
+        width: 60px;
+        height: 60px;
+    }
+
+    #profileUsername {
+        font-size: 16px;
+    }
+
+    .videoTitle {
+        font-size: 9px;
     }
 }
 
-/* =========================================
-   SIDEBAR VIDEOS
-========================================= */
+/* =========================================================
+   TOUCH DEVICES
+   ========================================================= */
 
-#otherVideos div {
+@media (hover: none) {
 
-    transition:
-        transform 160ms ease,
-        background 160ms ease,
-        box-shadow 160ms ease;
-}
+    #homeThumbnails > div:hover {
+        transform: none;
 
-#otherVideos div:hover {
-
-    transform:
-        translateX(4px);
-
-    box-shadow:
-        0 3px 10px rgba(0,0,0,0.12);
-}
-
-/* =========================================
-   USER ROWS
-========================================= */
-
-.userRow:hover {
-
-    transform:
-        translateX(4px);
-
-    background:
-        rgba(255,255,255,0.6);
-}
-
-/* =========================================
-   AVATARS
-========================================= */
-
-.avatar {
-
-    transition:
-        transform 220ms cubic-bezier(.2,.8,.2,1),
-        box-shadow 220ms ease;
-}
-
-.avatar:hover {
-
-    transform:
-        scale(1.08);
-
-    box-shadow:
-        0 6px 18px rgba(0,0,0,0.18);
-}
-
-/* =========================================
-   PANELS
-========================================= */
-
-#feedSection,
-#profileSection,
-#videoPlayerSection,
-#loginSection {
-
-    transition:
-        box-shadow 220ms ease,
-        transform 220ms ease;
-}
-
-#feedSection:hover,
-#profileSection:hover,
-#videoPlayerSection:hover,
-#loginSection:hover {
-
-    box-shadow:
-        0 10px 28px rgba(0,0,0,0.12);
-}
-
-/* =========================================
-   PLAYER
-========================================= */
-
-#playerIframe {
-
-    animation:
-        playerAppear 400ms ease;
-}
-
-@keyframes playerAppear {
-
-    from {
-        opacity: 0;
-        transform:
-            scale(0.985);
+        box-shadow:
+            0 1px 3px rgba(0, 0, 0, .09);
     }
 
-    to {
-        opacity: 1;
-        transform:
-            scale(1);
+    button,
+    input[type="button"],
+    input[type="submit"] {
+        min-height: 36px;
+        height: 36px;
     }
 }
 
-/* =========================================
-   SEARCH INPUT
-========================================= */
-
-input:focus,
-textarea:focus {
-
-    transform:
-        scale(1.01);
-
-    box-shadow:
-        0 0 0 3px rgba(120,160,255,0.15);
-}
-
-/* =========================================
-   WATERMARK FLOAT
-========================================= */
-
-#watermark {
-
-    animation:
-        watermarkFloat 6s ease-in-out infinite;
-}
-
-@keyframes watermarkFloat {
-
-    0% {
-        transform: translateY(0px);
-    }
-
-    50% {
-        transform: translateY(-4px);
-    }
-
-    100% {
-        transform: translateY(0px);
-    }
-}
-
-/* =========================================
-   SOFT BACKGROUND MOTION
-========================================= */
-
-body::before {
-
-    animation:
-        backgroundShift 18s ease-in-out infinite alternate;
-}
-
-@keyframes backgroundShift {
-
-    from {
-        filter:
-            brightness(1)
-            saturate(1);
-    }
-
-    to {
-        filter:
-            brightness(1.03)
-            saturate(1.05);
-    }
-}
-
-/* =========================================
-   REDUCED MOTION
-========================================= */
-
-@media (prefers-reduced-motion: reduce) {
-
-    * {
-        animation: none !important;
-        transition: none !important;
-    }
-}
 .videoTitle { cursor:pointer; color:blue; font-weight:500; margin:3px 0; }
 .videoMeta { color:grey; font-size:12px; margin-bottom:5px; }
 #videoPlayerWrapper { display:flex; gap:20px; }
@@ -1062,15 +1398,16 @@ Contraseña:<br><input type="password" id="loginPassword"><br><br>
       Novedades    </div>
 
     <div class="updatePost">
-      <b>📺 Nuevo sistema de perfiles</b>
-      <div class="updateMeta">Mayo 2026</div>
-      Users can now upload profile pictures and bios.
+      <b>Actualización de seguridad</b>
+      <div class="updateMeta">Septiembre de 2026</div>
+      Los usuarios ahora deben usar cuentas escolares.
+      <a href="https://river409.github.io/classtube/security.html">Saber más</a>
     </div>
 
     <div class="updatePost">
-      <b>👍 Botones de me gusta/no me gusta</b>
-      <div class="updateMeta">Mayo 2026</div>
-      Videos now support ratings.
+      <b>Actualización de interfaz para estándares modernos</b>
+      <div class="updateMeta">Septiembre 2026</div>
+
     </div>
 </div>
 
@@ -1436,13 +1773,20 @@ document.getElementById("signupBtn").onclick = async () => {
     document.getElementById("signupUsername").value.trim();
 
   const email =
-    document.getElementById("signupEmail").value.trim();
+    document.getElementById("signupEmail").value.trim().toLowerCase();
 
   const password =
     document.getElementById("signupPassword").value;
 
   const birthdate =
     document.getElementById("signupBirthdate").value;
+
+  // ONLY allow emails ending in @classtube.com
+  if (!email.endsWith("@classtube.com")) {
+    status.innerText =
+      "Solo se permiten correos @montessori-academico.es por motivos de seguridad";
+    return;
+  }
 
   try {
 
@@ -1473,6 +1817,7 @@ document.getElementById("signupBtn").onclick = async () => {
 
   }
 };
+
 
 // LOAD VIDEOS (10 RANDOM) — using stored thumbnails
 async function loadVideos() {
