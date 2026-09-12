@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html>
 <head>
@@ -1346,7 +1345,7 @@ table { border:2px solid #000; background:#eee; }
 <!-- HEADER -->
 <div id="userProfile" style="position:absolute; top:10px; right:15px; display:flex; align-items:center; gap:8px;">
 <img id="userAvatar" src="" style="width:34px; height:34px; border-radius:0; border:1px solid #888; display:none;">
-<span id="usernameDisplay" style="font-weight:500;"></span>
+
 </div>
 
 <table width="100%" border="0">
@@ -1388,9 +1387,15 @@ Contraseña:<br><input type="password" id="loginPassword"><br><br>
 <div id="feedSection" style="display:none; padding:20px;">
 <h3>Bienvenido, <span id="userEmail"></span></h3>
 <hr>
-<div id="searchContainer" style="margin-bottom:15px;">
-  <input type="text" id="searchInput" placeholder="Busca videos o usuarios" style="width:50%; padding:5px;">
+<div id="searchContainer">
+  <input
+    type="text"
+    id="searchInput"
+    placeholder="Busca videos o usuarios"
+  >
+  <button id="searchBtn">Buscar</button>
 </div>
+
 <div class="tabButtons">
   <button id="videosTab">Videos</button>
   <button id="peopleTab">Personas</button>
@@ -1623,8 +1628,21 @@ onAuthStateChanged(auth, async user => {
   currentUser=user;
   showSection("feed");
   headerLinks.style.display="inline";
-  userEmail.innerText=user.email;
-  await loadUsers();
+  const userSnap = await getDoc(
+  doc(db, "users", user.uid)
+);
+
+const userData = userSnap.exists()
+  ? userSnap.data()
+  : {};
+
+const username = userData.username || "User";
+
+userEmail.innerText = username;
+document.getElementById("usernameDisplay").innerText = username;
+
+await loadUsers();
+
   await loadVideos();
   await loadProfile();
 });
@@ -1781,10 +1799,10 @@ document.getElementById("signupBtn").onclick = async () => {
   const birthdate =
     document.getElementById("signupBirthdate").value;
 
-  // ONLY allow emails ending in @classtube.com
-  if (!email.endsWith("@classtube.com")) {
+  // ONLY allow emails ending in @montessori-academico.es
+  if (!email.endsWith("@montessori-academico.es")) {
     status.innerText =
-      "Solo se permiten correos @montessori-academico.es por motivos de seguridad";
+      "Ahora solo se permiten correos @montessori-academico.es por motivos de seguridad";
     return;
   }
 
@@ -1819,32 +1837,86 @@ document.getElementById("signupBtn").onclick = async () => {
 };
 
 
-// LOAD VIDEOS (10 RANDOM) — using stored thumbnails
+// LOAD VIDEOS (10 RANDOM) — with uploader username
 async function loadVideos() {
-  const snapshot = await getDocs(collection(db, "videos"));
-  const allVideos = [];
-  snapshot.forEach(doc => allVideos.push({ id: doc.id, data: doc.data() }));
 
+  const snapshot = await getDocs(collection(db, "videos"));
+
+  const allVideos = [];
+
+  snapshot.forEach(docSnap => {
+    allVideos.push({
+      id: docSnap.id,
+      data: docSnap.data()
+    });
+  });
+
+  // Pick 10 random videos
   const selected = [];
+
   while (selected.length < 10 && allVideos.length > 0) {
     const idx = Math.floor(Math.random() * allVideos.length);
+
     selected.push(allVideos[idx]);
+
     allVideos.splice(idx, 1);
   }
 
   let html = "";
-  selected.forEach(v => {
-    const thumb = v.data.thumbnail || "https://via.placeholder.com/160x90.png?text=Video"; // fallback
+
+  // Build cards
+  for (const v of selected) {
+
+    const data = v.data;
+
+    const thumb =
+      data.thumbnail ||
+      "https://via.placeholder.com/160x90.png?text=Video";
+
+    // Get uploader username from Firestore
+    let username = data.user || "User";
+
+    if (data.userId) {
+
+      const userSnap = await getDoc(
+        doc(db, "users", data.userId)
+      );
+
+      if (userSnap.exists()) {
+
+        const userData = userSnap.data();
+
+        username =
+          userData.username ||
+          "User";
+      }
+    }
+
     html += `
       <div onclick="playVideo('${v.id}')">
-        <img src="${thumb}" width="160" height="90" style="object-fit:cover; border:1px solid #000;">
-        <div class="videoTitle">${v.data.title}</div>
+
+        <img
+          src="${thumb}"
+          width="160"
+          height="90"
+          style="object-fit:cover; border:1px solid #000;"
+        >
+
+        <div class="videoTitle">
+          ${data.title || "Untitled"}
+        </div>
+
+        <div class="videoMeta">
+          ${username}
+        </div>
+
       </div>
     `;
-  });
+  }
 
-  document.getElementById('homeThumbnails').innerHTML = html;
+  document.getElementById("homeThumbnails").innerHTML = html;
 }
+
 // LOAD USER VIDEOS
 
 async function loadUserVideos(profileUid) {
@@ -1904,7 +1976,7 @@ async function loadUserVideos(profileUid) {
                     background:#c62828;
                     color:white;
                   ">
-                  Delete Video
+                  Eliminar video
                 </button>
               `
               : ""
@@ -1953,29 +2025,42 @@ window.playVideo = async function(videoId){
     data.description || "";
 
   // =========================
-  // UPLOADER (FIXED LOGIC)
-  // =========================
-  let uploaderData = null;
+// UPLOADER
+// =========================
 
-  if (data.userId) {
-    const userSnap = await getDoc(doc(db,"users", data.userId));
-    if (userSnap.exists()) {
-      uploaderData = userSnap.data();
-    }
-  }
+let uploaderData = null;
 
-  // 🔥 THIS is the important part:
-  const avatarUrl = getUserPfp(
-    uploaderData || { username: data.user }
+if (data.userId) {
+  const userSnap = await getDoc(
+    doc(db, "users", data.userId)
   );
 
-  document.getElementById('playerUploader').innerHTML = `
-    <div class="avatar" style="background-image:url('${avatarUrl}')"></div>
-    <span class="channelHeader"
-      onclick="showUserProfile('${data.userId}')">
-      ${data.user || "Unknown"}
-    </span>
-  `;
+  if (userSnap.exists()) {
+    uploaderData = userSnap.data();
+  }
+}
+
+const uploaderUsername =
+  uploaderData?.username || "User";
+
+const avatarUrl =
+  getUserPfp(uploaderData || {
+    username: uploaderUsername
+  });
+
+document.getElementById('playerUploader').innerHTML = `
+  <div
+    class="avatar"
+    style="background-image:url('${avatarUrl}')">
+  </div>
+
+  <span
+    class="channelHeader"
+    onclick="showUserProfile('${data.userId}')">
+    ${uploaderUsername}
+  </span>
+`;
+
 
   // =========================
   // STATS / TIME
@@ -2066,6 +2151,20 @@ document.getElementById('postVideoBtn').onclick=async ()=>{
   document.getElementById('videoDescription').value="";
   await loadVideos(); alert("Video uploaded!");
 };
+// USERNAMES
+async function getCurrentUsername() {
+  if (!currentUser) return "User";
+
+  const userSnap = await getDoc(
+    doc(db, "users", currentUser.uid)
+  );
+
+  if (userSnap.exists()) {
+    return userSnap.data().username || "User";
+  }
+
+  return "User";
+}
 
 // DELETE VIDEO
 window.deleteVideo = async function(videoId){
@@ -2193,15 +2292,25 @@ function getUserPfp(data){
   }
   return getAvatarFromUsername(data?.username || "");
 }
-// SEARCH
-document.getElementById('searchInput').addEventListener('input', async () => {
-  const queryText = document.getElementById('searchInput').value.toLowerCase();
+async function getUsername(uid) {
+  if (!uid) return "User";
 
-  // ===== VIDEOS =====
-document.getElementById('searchInput').addEventListener('input', async () => {
+  const userSnap = await getDoc(
+    doc(db, "users", uid)
+  );
 
-  const queryText =
-    document.getElementById('searchInput')
+  if (!userSnap.exists()) {
+    return "User";
+  }
+
+  return userSnap.data().username || "User";
+}
+
+// SEARCH — ONLY WHEN SEARCH BUTTON IS PRESSED
+document.getElementById("searchBtn").onclick = async () => {
+
+  const queryText = document
+    .getElementById("searchInput")
     .value
     .trim()
     .toLowerCase();
@@ -2209,16 +2318,15 @@ document.getElementById('searchInput').addEventListener('input', async () => {
   // =========================
   // EMPTY SEARCH
   // =========================
+
   if (queryText === "") {
-
-    await loadVideos(); // already limited to 10 random
-    await loadUsers();  // already limited to 10
-
+    await loadVideos();
+    await loadUsers();
     return;
   }
 
   // =========================
-  // VIDEO SEARCH
+  // SEARCH VIDEOS
   // =========================
 
   const videosSnap = await getDocs(collection(db, "videos"));
@@ -2232,10 +2340,13 @@ document.getElementById('searchInput').addEventListener('input', async () => {
 
     const data = docSnap.data();
 
-    const title =
-      (data.title || "").toLowerCase();
+    const title = (data.title || "").toLowerCase();
+    const description = (data.description || "").toLowerCase();
 
-    if (title.includes(queryText)) {
+    if (
+      title.includes(queryText) ||
+      description.includes(queryText)
+    ) {
 
       const thumb =
         data.thumbnail ||
@@ -2243,6 +2354,7 @@ document.getElementById('searchInput').addEventListener('input', async () => {
 
       videoHtml += `
         <div onclick="playVideo('${docSnap.id}')">
+
           <img
             src="${thumb}"
             width="160"
@@ -2253,6 +2365,11 @@ document.getElementById('searchInput').addEventListener('input', async () => {
           <div class="videoTitle">
             ${data.title || "Untitled"}
           </div>
+
+          <div class="videoMeta">
+            ${data.user || "Unknown"}
+          </div>
+
         </div>
       `;
 
@@ -2260,10 +2377,19 @@ document.getElementById('searchInput').addEventListener('input', async () => {
     }
   });
 
-  document.getElementById('homeThumbnails').innerHTML = videoHtml;
+  if (videoHtml === "") {
+    videoHtml = `
+      <p style="color:gray;">
+        No se encontraron videos.
+      </p>
+    `;
+  }
+
+  document.getElementById("homeThumbnails").innerHTML = videoHtml;
+
 
   // =========================
-  // USER SEARCH
+  // SEARCH USERS
   // =========================
 
   const usersSnap = await getDocs(collection(db, "users"));
@@ -2283,17 +2409,20 @@ document.getElementById('searchInput').addEventListener('input', async () => {
     if (username.includes(queryText)) {
 
       userHtml += `
-        <div class="userRow"
-          onclick="showUserProfile('${docSnap.id}')">
+        <div
+          class="userRow"
+          onclick="showUserProfile('${docSnap.id}')"
+        >
 
           <div
             class="avatar"
-            style="background-image:url('${getUserPfp(data)}')">
-          </div>
+            style="background-image:url('${getUserPfp(data)}')"
+          ></div>
 
           <span class="userName">
             ${data.username || "User"}
           </span>
+
         </div>
       `;
 
@@ -2301,28 +2430,27 @@ document.getElementById('searchInput').addEventListener('input', async () => {
     }
   });
 
-  document.getElementById('userList').innerHTML = userHtml;
-});  // ===== USERS (FIXED — NO TABLE) =====
-  const usersSnap = await getDocs(collection(db, "users"));
-  let userHtml = "";
+  if (userHtml === "") {
+    userHtml = `
+      <p style="color:gray;">
+        No se encontraron usuarios.
+      </p>
+    `;
+  }
 
-  usersSnap.forEach(doc => {
-    const data = doc.data();
-    const username = (data.username || "User").toLowerCase();
+  document.getElementById("userList").innerHTML = userHtml;
+};
 
-    if (username.includes(queryText)) {
-      userHtml += `
-        <div class="userRow" onclick="showUserProfile('${doc.id}')">
-          <div class="avatar" style="background-image:url('${getUserPfp(data)}')"></div>
-          <span class="userName">${data.username || "User"}</span>
-        </div>
-      `;
-    }
-  });
 
-  // 🔑 THIS LINE fixes your "everything merging together" bug
-  document.getElementById('userList').innerHTML = userHtml;
+// Allow pressing Enter to search
+document.getElementById("searchInput").addEventListener("keydown", (event) => {
+
+  if (event.key === "Enter") {
+    document.getElementById("searchBtn").click();
+  }
+
 });
+
 document.getElementById("logoutBtn").onclick = async (e) => {
   e.preventDefault();
   await signOut(auth);
